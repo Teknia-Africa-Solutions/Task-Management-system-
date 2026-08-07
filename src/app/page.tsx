@@ -357,7 +357,7 @@ export default function PrototypePage() {
           </div>
           <div className="flex-1 overflow-hidden">
             <h4 className="text-xs font-bold truncate text-white leading-tight">Elina</h4>
-            <p className="text-[11px] text-slate-400 truncate">admin@taskpulse.io</p>
+            <p className="text-[11px] text-slate-400 truncate">elina@gmail.com</p>
           </div>
         </div>
       </aside>
