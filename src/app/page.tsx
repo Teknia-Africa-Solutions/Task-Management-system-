@@ -57,7 +57,7 @@ const INITIAL_TASKS = [
 
 const CALENDAR_EVENTS = [
   { id: 1, title: 'MySQL Connection Pool', date: '2026-08-08', category: 'Database', priority: 'URGENT' },
-  { id: 2, title: 'Glassmorphism UI Review', date: '2026-08-10', category: 'UI/UX Design', priority: 'HIGH' },
+  { id: 2, title: 'UI Review', date: '2026-08-10', category: 'UI/UX Design', priority: 'HIGH' },
   { id: 3, title: 'JWT Auth Implementation', date: '2026-08-12', category: 'Backend', priority: 'MEDIUM' },
   { id: 4, title: 'Deploy Staging Server v2.4', date: '2026-08-14', category: 'DevOps', priority: 'URGENT' },
   { id: 5, title: 'Recharts Analytics View', date: '2026-08-15', category: 'Frontend', priority: 'LOW' },
@@ -353,7 +353,7 @@ export default function PrototypePage() {
 
         <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-800 shrink-0 mt-4">
           <div className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
-            AD
+    EL
           </div>
           <div className="flex-1 overflow-hidden">
             <h4 className="text-xs font-bold truncate text-white leading-tight">Elina</h4>
