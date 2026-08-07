@@ -1,6 +1,7 @@
+// app/page.tsx (updated Team section in sidebar and main content)
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -35,89 +36,255 @@ import {
   FileSpreadsheet,
   Image as ImageIcon,
   HardDrive,
-  Eye
+  Eye,
+  MessageSquare,
+  BarChart3,
+  Menu,
+  ListTodo,
+  CircleDashed,
+  CircleDot,
+  Circle,
+  CircleCheck,
+  Clock4,
+  Sparkles,
+  ArrowUpRight,
+  Flag,
+  MoreVertical,
+  Paperclip,
+  Send,
+  Star,
+  Check,
+  ArrowRight,
+  GraduationCap,
+  Code2,
+  Users2,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid
+  CartesianGrid,
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  Legend
 } from 'recharts';
 
+// Types
+type Task = {
+  id: number;
+  title: string;
+  category: string;
+  status: 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  due: string;
+  created_at?: string;
+  assignee?: string;
+};
+
+type Project = {
+  id: number;
+  name: string;
+  completedTasks: number;
+  totalTasks: number;
+  progress: number;
+  color: string;
+  icon: any;
+};
+
+type TeamMember = {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  initials: string;
+  capacity: number;
+  activeTasks: number;
+  completedTasks: number;
+  status: 'Active' | 'In Meeting' | 'Offline' | 'Busy';
+  barColor: string;
+  badgeBg: string;
+  gradient: string;
+  iconBg: string;
+};
+
+type UpcomingDeadline = {
+  id: number;
+  title: string;
+  date: string;
+  month: string;
+  day: string;
+  daysUntil: string;
+};
+
+type File = {
+  id: number;
+  name: string;
+  size: string;
+  type: string;
+  uploader: string;
+  date: string;
+  icon: any;
+  color: string;
+};
+
 // Mock Data
-const INITIAL_TASKS = [
-  { id: 1, title: 'Design Glassmorphism UI Components', category: 'UI/UX Design', status: 'IN_PROGRESS', priority: 'HIGH', due: '2026-08-10' },
-  { id: 2, title: 'Configure MySQL Connection Pool', category: 'Database', status: 'COMPLETED', priority: 'URGENT', due: '2026-08-08' },
-  { id: 3, title: 'Setup JWT Auth & Cookie Handling', category: 'Backend', status: 'PENDING', priority: 'MEDIUM', due: '2026-08-12' },
-  { id: 4, title: 'Implement Recharts Analytics View', category: 'Frontend', status: 'IN_PROGRESS', priority: 'LOW', due: '2026-08-15' },
+const INITIAL_TASKS: Task[] = [
+  { id: 1, title: 'UI Design for Dashboard', category: 'Design', status: 'IN_PROGRESS', priority: 'HIGH', due: '2026-05-21', assignee: 'Jane Doe' },
+  { id: 2, title: 'Database Design', category: 'Backend', status: 'TODO', priority: 'MEDIUM', due: '2026-05-23', assignee: 'David Brown' },
+  { id: 3, title: 'API Integration', category: 'Backend', status: 'IN_PROGRESS', priority: 'MEDIUM', due: '2026-05-24', assignee: 'Mike Johnson' },
+  { id: 4, title: 'Project Documentation', category: 'Docs', status: 'TODO', priority: 'LOW', due: '2026-05-28', assignee: 'Sarah Wilson' },
+  { id: 5, title: 'Client Meeting', category: 'Management', status: 'DONE', priority: 'HIGH', due: '2026-05-20', assignee: 'Nova' },
+  { id: 6, title: 'Landing Page Design', category: 'Design', status: 'DONE', priority: 'HIGH', due: '2026-05-19', assignee: 'Jane Doe' },
+  { id: 7, title: 'User Authentication', category: 'Backend', status: 'DONE', priority: 'URGENT', due: '2026-05-18', assignee: 'Sarah Wilson' },
+  { id: 8, title: 'Fix Login Page Bug', category: 'Frontend', status: 'IN_PROGRESS', priority: 'URGENT', due: '2026-05-21', assignee: 'Mike Johnson' },
+  { id: 9, title: 'Update API Documentation', category: 'Docs', status: 'TODO', priority: 'HIGH', due: '2026-05-21', assignee: 'Nova' },
+  { id: 10, title: 'Deploy Staging Environment', category: 'DevOps', status: 'TODO', priority: 'MEDIUM', due: '2026-05-21', assignee: 'David Brown' },
 ];
 
-const CALENDAR_EVENTS = [
-  { id: 1, title: 'MySQL Connection Pool', date: '2026-08-08', category: 'Database', priority: 'URGENT' },
-  { id: 2, title: 'UI Review', date: '2026-08-10', category: 'UI/UX Design', priority: 'HIGH' },
-  { id: 3, title: 'JWT Auth Implementation', date: '2026-08-12', category: 'Backend', priority: 'MEDIUM' },
-  { id: 4, title: 'Deploy Staging Server v2.4', date: '2026-08-14', category: 'DevOps', priority: 'URGENT' },
-  { id: 5, title: 'Recharts Analytics View', date: '2026-08-15', category: 'Frontend', priority: 'LOW' },
-  { id: 6, title: 'Team Sprint Planning', date: '2026-08-18', category: 'Management', priority: 'HIGH' },
-  { id: 7, title: 'Security Compliance Audit', date: '2026-08-22', category: 'Security', priority: 'URGENT' },
-  { id: 8, title: 'Mobile Refactor Sync', date: '2026-08-25', category: 'Mobile', priority: 'MEDIUM' },
+const PROJECTS_DATA: Project[] = [
+  { id: 1, name: 'Inventory Management System', completedTasks: 15, totalTasks: 20, progress: 75, color: '#b35c44', icon: Folder },
+  { id: 2, name: 'Task Management System', completedTasks: 12, totalTasks: 18, progress: 67, color: '#8f6b5c', icon: LayoutGrid },
+  { id: 3, name: 'Website Redesign', completedTasks: 8, totalTasks: 15, progress: 53, color: '#d4846a', icon: FileText },
+  { id: 4, name: 'Mobile App Development', completedTasks: 10, totalTasks: 25, progress: 40, color: '#4f6d7a', icon: Smartphone },
 ];
 
-const TASKS_DUE_THIS_WEEK = [
-  { id: 101, title: 'Deploy Staging Server v2.4', category: 'DevOps', status: 'IN_PROGRESS', priority: 'URGENT', due: 'Wed, 5:00 PM' },
-  { id: 102, title: 'Fix Auth Cookie Expiry Bug', category: 'Backend', status: 'PENDING', priority: 'HIGH', due: 'Thu, 6:30 PM' },
-  { id: 103, title: 'Review Figma Component Specs', category: 'UI/UX Design', status: 'COMPLETED', priority: 'MEDIUM', due: 'Tue, 2:00 PM' },
-  { id: 104, title: 'Update API Documentation', category: 'Docs', status: 'PENDING', priority: 'LOW', due: 'Fri, 8:00 PM' },
+const TEAM_MEMBERS: TeamMember[] = [
+  { 
+    id: 1, 
+    name: 'Nova', 
+    role: 'Project Manager', 
+    email: 'nova@taskflow.io', 
+    phone: '+1 (555) 019-2834', 
+    initials: 'NV', 
+    capacity: 80, 
+    activeTasks: 8, 
+    completedTasks: 24, 
+    status: 'Active',
+    barColor: 'bg-gradient-to-r from-[#b35c44] to-[#d4846a]',
+    badgeBg: 'bg-emerald-100 text-emerald-700',
+    gradient: 'bg-gradient-to-br from-[#b35c44] to-[#d4846a]',
+    iconBg: 'bg-[#b35c44]/10'
+  },
+  { 
+    id: 2, 
+    name: 'Jane Doe', 
+    role: 'UI/UX Designer', 
+    email: 'jane@taskflow.io', 
+    phone: '+1 (555) 014-4920', 
+    initials: 'JD', 
+    capacity: 65, 
+    activeTasks: 5, 
+    completedTasks: 19, 
+    status: 'Active',
+    barColor: 'bg-gradient-to-r from-[#4f6d7a] to-[#7a9ba8]',
+    badgeBg: 'bg-emerald-100 text-emerald-700',
+    gradient: 'bg-gradient-to-br from-[#4f6d7a] to-[#7a9ba8]',
+    iconBg: 'bg-[#4f6d7a]/10'
+  },
+  { 
+    id: 3, 
+    name: 'Mike Johnson', 
+    role: 'Backend Developer', 
+    email: 'mike@taskflow.io', 
+    phone: '+1 (555) 017-8821', 
+    initials: 'MJ', 
+    capacity: 75, 
+    activeTasks: 7, 
+    completedTasks: 31, 
+    status: 'In Meeting',
+    barColor: 'bg-gradient-to-r from-[#8f6b5c] to-[#b38b7a]',
+    badgeBg: 'bg-amber-100 text-amber-700',
+    gradient: 'bg-gradient-to-br from-[#8f6b5c] to-[#b38b7a]',
+    iconBg: 'bg-[#8f6b5c]/10'
+  },
+  { 
+    id: 4, 
+    name: 'Sarah Wilson', 
+    role: 'QA / Tester', 
+    email: 'sarah@taskflow.io', 
+    phone: '+1 (555) 012-3391', 
+    initials: 'SW', 
+    capacity: 40, 
+    activeTasks: 3, 
+    completedTasks: 15, 
+    status: 'Busy',
+    barColor: 'bg-gradient-to-r from-[#d4846a] to-[#e8a48c]',
+    badgeBg: 'bg-rose-100 text-rose-700',
+    gradient: 'bg-gradient-to-br from-[#d4846a] to-[#e8a48c]',
+    iconBg: 'bg-[#d4846a]/10'
+  },
+  { 
+    id: 5, 
+    name: 'David Brown', 
+    role: 'DevOps Engineer', 
+    email: 'david@taskflow.io', 
+    phone: '+1 (555) 016-7721', 
+    initials: 'DB', 
+    capacity: 55, 
+    activeTasks: 4, 
+    completedTasks: 12, 
+    status: 'Offline',
+    barColor: 'bg-gradient-to-r from-[#a67b6b] to-[#c4a08e]',
+    badgeBg: 'bg-slate-100 text-slate-700',
+    gradient: 'bg-gradient-to-br from-[#a67b6b] to-[#c4a08e]',
+    iconBg: 'bg-[#a67b6b]/10'
+  },
+  { 
+    id: 6, 
+    name: 'Emily Chen', 
+    role: 'Frontend Developer', 
+    email: 'emily@taskflow.io', 
+    phone: '+1 (555) 018-4431', 
+    initials: 'EC', 
+    capacity: 70, 
+    activeTasks: 6, 
+    completedTasks: 22, 
+    status: 'Active',
+    barColor: 'bg-gradient-to-r from-[#b35c44] to-[#d4846a]',
+    badgeBg: 'bg-emerald-100 text-emerald-700',
+    gradient: 'bg-gradient-to-br from-[#b35c44] to-[#d4846a]',
+    iconBg: 'bg-[#b35c44]/10'
+  },
 ];
 
-const INITIAL_FILES = [
-  { id: 1, name: 'Database_Schema_v2.sql', size: '2.4 MB', type: 'code', uploader: 'Mike', date: '2026-08-05', icon: FileCode, color: 'text-amber-500 bg-amber-50' },
-  { id: 2, name: 'Q3_Financial_Forecast.xlsx', size: '1.8 MB', type: 'spreadsheet', uploader: 'Elina', date: '2026-08-04', icon: FileSpreadsheet, color: 'text-emerald-500 bg-emerald-50' },
-  { id: 3, name: 'Glassmorphism_UI_Spec.png', size: '8.1 MB', type: 'image', uploader: 'Jane', date: '2026-08-02', icon: ImageIcon, color: 'text-indigo-500 bg-indigo-50' },
-  { id: 4, name: 'API_EndPoints_Doc.pdf', size: '512 KB', type: 'pdf', uploader: 'Nova', date: '2026-07-29', icon: FileText, color: 'text-rose-500 bg-rose-50' },
-  { id: 5, name: 'System_Architecture.png', size: '4.3 MB', type: 'image', uploader: 'Brian', date: '2026-07-28', icon: ImageIcon, color: 'text-indigo-500 bg-indigo-50' },
-];
-
-const TEAM_WORKLOAD = [
-  { id: 1, name: 'Nova', role: 'Project Manager', email: 'nova@taskpulse.io', phone: '+1 (555) 019-2834', initials: 'NV', capacity: 80, activeTasks: 8, completedTasks: 24, status: 'Active', barColor: 'bg-purple-600', badgeBg: 'bg-purple-100 text-purple-700' },
-  { id: 2, name: 'Jane', role: 'UI/UX Designer', email: 'jane@taskpulse.io', phone: '+1 (555) 014-4920', initials: 'JN', capacity: 65, activeTasks: 5, completedTasks: 19, status: 'Active', barColor: 'bg-blue-500', badgeBg: 'bg-blue-100 text-blue-700' },
-  { id: 3, name: 'Mike', role: 'Backend Developer', email: 'mike@taskpulse.io', phone: '+1 (555) 017-8821', initials: 'MK', capacity: 75, activeTasks: 7, completedTasks: 31, status: 'In Meeting', barColor: 'bg-emerald-500', badgeBg: 'bg-emerald-100 text-emerald-700' },
-  { id: 4, name: 'Brian', role: 'QA / Tester', email: 'brian@taskpulse.io', phone: '+1 (555) 012-3391', initials: 'BR', capacity: 40, activeTasks: 3, completedTasks: 15, status: 'Offline', barColor: 'bg-amber-500', badgeBg: 'bg-amber-100 text-amber-700' },
-];
-
-const OVERVIEW_PROJECTS = [
-  { id: 1, title: 'Inventory Management System', completedTasks: 15, totalTasks: 20, progress: 75, icon: Folder, iconBg: 'bg-blue-500', barBg: 'bg-blue-500' },
-  { id: 2, title: 'Task Management System', completedTasks: 12, totalTasks: 18, progress: 67, icon: LayoutGrid, iconBg: 'bg-purple-500', barBg: 'bg-purple-500' },
-  { id: 3, title: 'Website Redesign', completedTasks: 8, totalTasks: 15, progress: 53, icon: FileText, iconBg: 'bg-orange-500', barBg: 'bg-orange-500' },
-  { id: 4, title: 'Mobile App Development', completedTasks: 10, totalTasks: 25, progress: 40, icon: Smartphone, iconBg: 'bg-emerald-500', barBg: 'bg-emerald-500' },
-];
-
-const PROJECTS = [
-  { id: 1, name: 'TaskPulse Enterprise v2.0', progress: 68, budget: '$12,500', members: 4, status: 'Active' },
-  { id: 2, name: 'Mobile App Refactor', progress: 32, budget: '$8,000', members: 3, status: 'Active' },
-  { id: 3, name: 'Security Audit & Compliance', progress: 90, budget: '$5,000', members: 2, status: 'Review' },
-  { id: 4, name: 'Cloud Infrastructure Migration', progress: 45, budget: '$18,000', members: 4, status: 'Active' },
-  { id: 5, name: 'AI Chatbot Integration', progress: 15, budget: '$9,500', members: 3, status: 'Planning' },
+const UPCOMING_DEADLINES: UpcomingDeadline[] = [
+  { id: 1, title: 'Project Proposal', date: '2026-05-21', month: 'MAY', day: '21', daysUntil: 'Tomorrow' },
+  { id: 2, title: 'UI Design Submission', date: '2026-05-23', month: 'MAY', day: '23', daysUntil: 'In 2 days' },
+  { id: 3, title: 'Client Presentation', date: '2026-05-24', month: 'MAY', day: '24', daysUntil: 'In 3 days' },
+  { id: 4, title: 'Final Report', date: '2026-05-28', month: 'MAY', day: '28', daysUntil: 'In 7 days' },
 ];
 
 const CHART_DATA = [
-  { name: 'Mon', completed: 4, pending: 2 },
-  { name: 'Tue', completed: 6, pending: 4 },
-  { name: 'Wed', completed: 8, pending: 3 },
-  { name: 'Thu', completed: 5, pending: 6 },
-  { name: 'Fri', completed: 9, pending: 2 },
-  { name: 'Sat', completed: 11, pending: 1 },
-  { name: 'Sun', completed: 14, pending: 2 },
+  { name: 'Wed, May 21', completed: 18, created: 25 },
+  { name: 'Thu', completed: 22, created: 18 },
+  { name: 'Fri', completed: 20, created: 22 },
+  { name: 'Sat', completed: 15, created: 12 },
+  { name: 'Sun', completed: 10, created: 8 },
 ];
 
-const WEEKS = Array.from({ length: 12 }, (_, i) => {
-  const weekNum = i + 1;
-  const suffix = weekNum === 1 ? 'st' : weekNum === 2 ? 'nd' : weekNum === 3 ? 'rd' : 'th';
-  return `${weekNum}${suffix} Week`;
-});
+// Weekly trend data for line chart
+const WEEKLY_TREND_DATA = [
+  { week: 'Week 1', completed: 12, pending: 8 },
+  { week: 'Week 2', completed: 18, pending: 12 },
+  { week: 'Week 3', completed: 15, pending: 10 },
+  { week: 'Week 4', completed: 22, pending: 14 },
+  { week: 'Week 5', completed: 28, pending: 9 },
+  { week: 'Week 6', completed: 35, pending: 11 },
+  { week: 'Week 7', completed: 30, pending: 15 },
+  { week: 'Week 8', completed: 40, pending: 18 },
+  { week: 'Week 9', completed: 45, pending: 12 },
+  { week: 'Week 10', completed: 38, pending: 16 },
+  { week: 'Week 11', completed: 50, pending: 20 },
+  { week: 'Week 12', completed: 55, pending: 14 },
+];
 
 const NAV_ITEMS = [
   { name: 'Dashboard', id: 'dashboard', icon: LayoutDashboard },
@@ -125,21 +292,41 @@ const NAV_ITEMS = [
   { name: 'Projects', id: 'projects', icon: FolderKanban },
   { name: 'Calendar', id: 'calendar', icon: CalendarIcon },
   { name: 'Team', id: 'team', icon: Users },
+  { name: 'Messages', id: 'messages', icon: MessageSquare },
   { name: 'Files', id: 'files', icon: FileText },
+  { name: 'Reports', id: 'reports', icon: BarChart3 },
   { name: 'Notifications', id: 'notifications', icon: Bell },
-  { name: 'Settings', id: 'settings', icon: Settings },
 ];
 
+const INITIAL_FILES: File[] = [
+  { id: 1, name: 'Database_Schema_v2.sql', size: '2.4 MB', type: 'code', uploader: 'Mike', date: '2026-05-05', icon: FileCode, color: 'text-amber-700 bg-amber-100' },
+  { id: 2, name: 'Q3_Financial_Forecast.xlsx', size: '1.8 MB', type: 'spreadsheet', uploader: 'Elina', date: '2026-05-04', icon: FileSpreadsheet, color: 'text-emerald-700 bg-emerald-100' },
+  { id: 3, name: 'UI_Spec.png', size: '8.1 MB', type: 'image', uploader: 'Jane', date: '2026-05-02', icon: ImageIcon, color: 'text-indigo-700 bg-indigo-100' },
+  { id: 4, name: 'API_Doc.pdf', size: '512 KB', type: 'pdf', uploader: 'Nova', date: '2026-04-29', icon: FileText, color: 'text-rose-700 bg-rose-100' },
+  { id: 5, name: 'Architecture.png', size: '4.3 MB', type: 'image', uploader: 'Brian', date: '2026-04-28', icon: ImageIcon, color: 'text-indigo-700 bg-indigo-100' },
+];
+
+// Student Team Data
+const STUDENT_TEAM = [
+  { name: 'Alex Chen', role: 'Frontend Lead', avatar: 'AC', color: 'bg-[#b35c44]' },
+  { name: 'Maria Rodriguez', role: 'Backend Developer', avatar: 'MR', color: 'bg-[#8f6b5c]' },
+  { name: 'James Kim', role: 'UI/UX Designer', avatar: 'JK', color: 'bg-[#d4846a]' },
+  { name: 'Sarah Patel', role: 'Project Manager', avatar: 'SP', color: 'bg-[#4f6d7a]' },
+  { name: 'Tom Wilson', role: 'Full Stack Developer', avatar: 'TW', color: 'bg-[#b38b7a]' },
+  { name: 'Emily Davis', role: 'QA Engineer', avatar: 'ED', color: 'bg-[#a67b6b]' },
+];
+
+// Custom Chart Tooltip
 const CustomChartTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900/90 backdrop-blur-md text-white p-2.5 rounded-lg border border-slate-700/50 shadow-xl text-[11px] space-y-1">
-        <p className="font-bold text-slate-300 border-b border-slate-700/60 pb-0.5">{label}</p>
+      <div className="bg-[#2d231e]/90 backdrop-blur-md text-white p-2.5 rounded-lg border border-[#5a4a42]/50 shadow-xl text-[11px] space-y-1">
+        <p className="font-bold text-[#d6c9c2] border-b border-[#5a4a42]/60 pb-0.5">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-slate-300 capitalize">{entry.name}:</span>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color || entry.fill || entry.stroke }} />
+              <span className="text-[#d6c9c2] capitalize">{entry.name}:</span>
             </div>
             <span className="font-bold text-white font-mono">{entry.value}</span>
           </div>
@@ -150,161 +337,183 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function PrototypePage() {
+export default function Home() {
+  const [isLandingPage, setIsLandingPage] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
-  const [files, setFiles] = useState(INITIAL_FILES);
-  const [selectedWeek, setSelectedWeek] = useState('1st Week');
-  const [filterStatus, setFilterStatus] = useState('ALL');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-
-  // New task form states
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskCategory, setNewTaskCategory] = useState('Frontend');
+  const [newTaskCategory, setNewTaskCategory] = useState('Design');
   const [newTaskPriority, setNewTaskPriority] = useState('MEDIUM');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [files, setFiles] = useState<File[]>(INITIAL_FILES);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileView, setProfileView] = useState<'profile' | 'settings' | 'notifications' | null>(null);
+  const [taskFilter, setTaskFilter] = useState<'ALL' | 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE'>('ALL');
+  const [teamMembers] = useState<TeamMember[]>(TEAM_MEMBERS);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // File Upload State
-  const [uploadFileName, setUploadFileName] = useState('');
+  // Fetch tasks from MySQL API
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('/api/tasks');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.length > 0) {
+            setTasks(data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+    fetchTasks();
+  }, []);
 
-  const handleCreateTask = (e: React.FormEvent) => {
+  const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
     const newTask = {
-      id: Date.now(),
       title: newTaskTitle,
       category: newTaskCategory,
-      status: 'PENDING',
+      status: 'TODO',
       priority: newTaskPriority,
-      due: '2026-08-20',
+      due: new Date().toISOString().split('T')[0],
+      assignee: 'You',
     };
 
-    setTasks([newTask, ...tasks]);
-    setNewTaskTitle('');
-    setIsModalOpen(false);
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask),
+      });
+      if (response.ok) {
+        const createdTask = await response.json();
+        setTasks([createdTask, ...tasks]);
+        setNewTaskTitle('');
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
   };
 
-  const handleFileUpload = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!uploadFileName.trim()) return;
+  const handleFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
-    const newFile = {
-      id: Date.now(),
-      name: uploadFileName,
-      size: '1.2 MB',
-      type: 'code',
-      uploader: 'Elina',
-      date: 'Today',
-      icon: FileCode,
-      color: 'text-indigo-500 bg-indigo-50',
-    };
-
-    setFiles([newFile, ...files]);
-    setUploadFileName('');
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const newFile: File = {
+        id: Date.now(),
+        name: file.name,
+        size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        type: file.type.split('/')[0] || 'file',
+        uploader: 'You',
+        date: 'Today',
+        icon: file.type.includes('image') ? ImageIcon : file.type.includes('pdf') ? FileText : FileCode,
+        color: 'text-indigo-700 bg-indigo-100',
+      };
+      setFiles([newFile, ...files]);
+    }
+    e.target.value = '';
   };
 
   const handleDeleteFile = (id: number) => {
     setFiles(files.filter((f) => f.id !== id));
   };
 
-  const filteredTasks = tasks.filter((t) => {
-    if (filterStatus === 'ALL') return true;
-    return t.status === filterStatus;
-  });
-
   const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'URGENT':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200/60">URGENT</span>;
-      case 'HIGH':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200/60">HIGH</span>;
-      case 'MEDIUM':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-200/60">MEDIUM</span>;
-      default:
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/60">LOW</span>;
-    }
+    const styles: Record<string, string> = {
+      URGENT: 'bg-rose-50 text-rose-600 border-rose-200/60',
+      HIGH: 'bg-amber-50 text-amber-600 border-amber-200/60',
+      MEDIUM: 'bg-blue-50 text-blue-600 border-blue-200/60',
+      LOW: 'bg-slate-100 text-slate-600 border-slate-200/60',
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${styles[priority] || styles.LOW}`}>
+        {priority}
+      </span>
+    );
   };
 
-  const getStatusIndicator = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return (
-          <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
-            <CheckCircle className="w-3 h-3" /> Completed
-          </span>
-        );
-      case 'IN_PROGRESS':
-        return (
-          <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60">
-            <Clock className="w-3 h-3 animate-spin" style={{ animationDuration: '4s' }} /> In Progress
-          </span>
-        );
-      default:
-        return (
-          <span className="flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/60">
-            <AlertCircle className="w-3 h-3" /> Pending
-          </span>
-        );
-    }
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      TODO: 'bg-amber-50 text-amber-600 border-amber-200/60',
+      IN_PROGRESS: 'bg-blue-50 text-blue-600 border-blue-200/60',
+      REVIEW: 'bg-purple-50 text-purple-600 border-purple-200/60',
+      DONE: 'bg-emerald-50 text-emerald-600 border-emerald-200/60',
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${styles[status] || styles.TODO}`}>
+        {status.replace('_', ' ')}
+      </span>
+    );
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      'Active': 'bg-emerald-500',
+      'In Meeting': 'bg-amber-500',
+      'Busy': 'bg-rose-500',
+      'Offline': 'bg-slate-400',
+    };
+    return colors[status] || 'bg-slate-400';
+  };
+
+  const getStatusTextColor = (status: string) => {
+    const colors: Record<string, string> = {
+      'Active': 'text-emerald-600 bg-emerald-50',
+      'In Meeting': 'text-amber-600 bg-amber-50',
+      'Busy': 'text-rose-600 bg-rose-50',
+      'Offline': 'text-slate-600 bg-slate-50',
+    };
+    return colors[status] || 'text-slate-600 bg-slate-50';
   };
 
   const renderCalendarDays = () => {
     const days = [];
-    const padding = 6;
+    const firstDay = new Date(2026, 4, 1).getDay();
     const totalDays = 31;
 
-    for (let i = 0; i < padding; i++) {
-      days.push(
-        <div key={`pad-${i}`} className="min-h-[72px] p-1.5 bg-slate-50/50 border border-slate-100 text-slate-300 font-mono text-[10px]">
-          {26 + i}
-        </div>
-      );
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-16 bg-[#f5f0ec]/30 border border-[#e5ddd8]"></div>);
     }
 
     for (let day = 1; day <= totalDays; day++) {
-      const dateStr = `2026-08-${day < 10 ? '0' + day : day}`;
-      const dayEvents = CALENDAR_EVENTS.filter((e) => e.date === dateStr);
-      const isToday = day === 7;
-
+      const isToday = day === 21;
+      const hasEvent = day === 21 || day === 23 || day === 24 || day === 28;
+      
       days.push(
-        <div
-          key={day}
-          className={`min-h-[72px] p-1.5 border border-slate-100 transition flex flex-col justify-between overflow-hidden ${
-            isToday ? 'bg-indigo-50/40 ring-1 ring-indigo-500/40' : 'bg-white hover:bg-slate-50/50'
+        <div 
+          key={day} 
+          className={`h-16 p-1 border border-[#e5ddd8] transition ${
+            isToday ? 'bg-[#f0e4dc] ring-2 ring-[#b35c44] ring-inset' : 'bg-white hover:bg-[#faf6f3]'
           }`}
         >
-          <div className="flex justify-between items-center">
-            <span
-              className={`text-[10px] font-bold font-mono rounded-full w-5 h-5 flex items-center justify-center ${
-                isToday ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-700'
-              }`}
-            >
+          <div className="flex justify-between items-start">
+            <span className={`text-xs font-bold ${isToday ? 'text-[#b35c44]' : 'text-[#2d231e]'}`}>
               {day}
             </span>
+            {hasEvent && <div className="w-1.5 h-1.5 rounded-full bg-[#b35c44] mt-1"></div>}
           </div>
-
-          <div className="space-y-1 overflow-hidden">
-            {dayEvents.slice(0, 2).map((evt) => (
-              <div
-                key={evt.id}
-                className={`px-1.5 py-0.5 rounded text-[9px] font-semibold leading-tight truncate border ${
-                  evt.priority === 'URGENT'
-                    ? 'bg-rose-50 text-rose-700 border-rose-200/80'
-                    : evt.priority === 'HIGH'
-                    ? 'bg-amber-50 text-amber-700 border-amber-200/80'
-                    : 'bg-indigo-50 text-indigo-700 border-indigo-200/80'
-                }`}
-              >
-                {evt.title}
-              </div>
-            ))}
-            {dayEvents.length > 2 && (
-              <span className="text-[8px] font-bold text-slate-400 block leading-none pl-0.5">
-                +{dayEvents.length - 2} more
-              </span>
-            )}
-          </div>
+          {day === 21 && (
+            <div className="mt-0.5">
+              <div className="text-[8px] font-medium bg-rose-50 text-rose-600 px-1 rounded truncate">Project Proposal</div>
+            </div>
+          )}
+          {day === 23 && (
+            <div className="mt-0.5">
+              <div className="text-[8px] font-medium bg-amber-50 text-amber-600 px-1 rounded truncate">UI Design</div>
+            </div>
+          )}
         </div>
       );
     }
@@ -312,24 +521,210 @@ export default function PrototypePage() {
     return days;
   };
 
-  return (
-    <div className="flex h-screen w-screen bg-[#F8FAFC] text-slate-800 font-sans overflow-hidden">
-      {/* 1. SIDEBAR */}
-      <aside className="w-64 bg-[#0B132B] text-slate-400 border-r border-slate-800 flex flex-col justify-between p-4 shrink-0 select-none h-full z-30">
-        <div className="flex flex-col min-h-0">
-          {/* BRAND LOGO AREA */}
-          <div className="flex items-center gap-3 px-2 py-3 mb-4 shrink-0">
-            <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/30 text-emerald-400 shadow-sm shadow-emerald-950/50">
-              <Activity className="w-5 h-5 stroke-[2.2]" />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
-            <div>
-              <h2 className="font-bold text-white text-lg tracking-tight">TaskPulse</h2>
-              <p className="text-[10px] text-teal-400 font-bold tracking-wider uppercase">Dashboard</p>
+  // Handle profile menu actions
+  const handleProfileAction = (action: 'profile' | 'settings' | 'notifications' | 'logout') => {
+    setIsProfileMenuOpen(false);
+    if (action === 'logout') {
+      setIsLandingPage(true);
+      return;
+    }
+    setProfileView(action);
+    setActiveTab(action === 'profile' ? 'profile' : action === 'settings' ? 'settings' : 'notifications');
+  };
+
+  // Filter tasks based on selected status
+  const getFilteredTasks = () => {
+    if (taskFilter === 'ALL') return tasks;
+    return tasks.filter(task => task.status === taskFilter);
+  };
+
+  const filteredTasks = getFilteredTasks();
+
+  // Landing Page
+  if (isLandingPage) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#f7f2ee] to-white">
+        {/* Navbar */}
+        <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-[#e5ddd8]/80 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-2">
+                <div className="relative p-2 rounded-lg bg-gradient-to-br from-[#b35c44]/20 to-[#8f6b5c]/20 border border-[#b35c44]/30 text-[#d4846a]">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-lg text-[#2d231e]">TaskFlow</span>
+              </div>
+
+              <div className="hidden md:flex items-center gap-8">
+                <button 
+                  onClick={() => setIsLandingPage(false)}
+                  className="px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] rounded-xl hover:shadow-lg transition flex items-center gap-2"
+                >
+                  Go to Dashboard <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-[#f5f0ec] transition"
+              >
+                <Menu className="w-5 h-5 text-[#2d231e]" />
+              </button>
             </div>
           </div>
 
-          <nav className="space-y-1 overflow-y-auto pr-1 flex-1">
+          {mobileMenuOpen && (
+            <div className="md:hidden bg-white border-t border-[#e5ddd8]/80 p-4 space-y-3">
+              <button 
+                onClick={() => setIsLandingPage(false)}
+                className="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2"
+              >
+                Go to Dashboard <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </nav>
+
+        {/* Hero Section */}
+        <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0e4dc] text-[#8f6b5c] text-xs font-semibold mb-6">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Student Development Team
+                </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#2d231e] leading-tight mb-6">
+                  Manage Projects & 
+                  <span className="text-[#b35c44]"> Tasks Together</span>
+                </h1>
+                <p className="text-lg text-[#6b5a4e] mb-8 max-w-lg">
+                  A collaborative platform for student teams to manage projects, track tasks, 
+                  and build amazing software together. From idea to deployment, we've got you covered.
+                </p>
+                <div className="flex items-center gap-6 mt-8">
+                  <div className="flex -space-x-2">
+                    {STUDENT_TEAM.slice(0, 5).map((member, i) => (
+                      <div key={i} className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold text-white ${member.color}`}>
+                        {member.avatar}
+                      </div>
+                    ))}
+                    <div className="w-10 h-10 rounded-full bg-[#f0e4dc] border-2 border-white flex items-center justify-center text-xs font-bold text-[#8f6b5c]">
+                      +{STUDENT_TEAM.length - 5}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1">
+                      {[1,2,3,4,5].map((i) => (
+                        <Star key={i} className="w-4 h-4 fill-[#f59e0b] text-[#f59e0b]" />
+                      ))}
+                    </div>
+                    <p className="text-xs text-[#6b5a4e]">6 passionate students</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="bg-white rounded-2xl shadow-2xl border border-[#e5ddd8] p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-[#b35c44]"></div>
+                      <div className="w-3 h-3 rounded-full bg-[#d4846a]"></div>
+                      <div className="w-3 h-3 rounded-full bg-[#8f6b5c]"></div>
+                    </div>
+                    <span className="text-xs text-[#6b5a4e]">Student Team Workspace</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {STUDENT_TEAM.slice(0, 4).map((member, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 bg-[#f5f0ec] rounded-lg">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${member.color}`}>
+                          {member.avatar}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[#2d231e] truncate">{member.name}</p>
+                          <p className="text-[8px] text-[#6b5a4e] truncate">{member.role}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-[#f0e4dc]/30 rounded-xl border border-[#e5d5cb]/60">
+                    <div className="flex items-center gap-2">
+                      <Code2 className="w-4 h-4 text-[#b35c44]" />
+                      <span className="text-xs font-semibold text-[#2d231e]">Current Sprint</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-xs text-[#6b5a4e]">6 active tasks</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-[#e5ddd8] flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-[#b35c44]" />
+                      <span className="text-xs text-[#6b5a4e]">Software Engineering Class</span>
+                    </div>
+                    <span className="text-xs font-semibold text-[#b35c44]">Spring 2026</span>
+                  </div>
+                </div>
+
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#b35c44]/10 rounded-full blur-2xl -z-10"></div>
+                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-[#8f6b5c]/10 rounded-full blur-2xl -z-10"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Simplified Footer */}
+        <footer className="bg-[#1f1814] text-[#b5a69c] py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="relative p-2 rounded-lg bg-gradient-to-br from-[#b35c44]/20 to-[#8f6b5c]/20 border border-[#b35c44]/30 text-[#d4846a]">
+                  <Activity className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-white">TaskFlow</span>
+              </div>
+              <p className="text-sm text-[#b5a69c] text-center">Student development team workspace.</p>
+            </div>
+            <div className="border-t border-[#3a2d26] mt-8 pt-8 text-center text-sm text-[#6b5a4e]">
+              © 2026 TaskFlow. All rights reserved.
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // Dashboard App
+  return (
+    <div className="flex h-screen w-screen bg-[#f7f2ee] text-[#2d231e] font-sans overflow-hidden">
+      {/* SIDEBAR */}
+      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-[#1f1814] text-[#b5a69c] border-r border-[#3a2d26] flex flex-col justify-between p-4 shrink-0 select-none h-full z-30 transition-all duration-300`}>
+        <div className="flex flex-col min-h-0">
+          {/* BRAND */}
+          <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-2 py-3 mb-4 shrink-0`}>
+            <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-[#b35c44]/20 to-[#8f6b5c]/20 border border-[#b35c44]/30 text-[#d4846a] shadow-sm shadow-[#b35c44]/10">
+              <Activity className="w-5 h-5 stroke-[2.2]" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#d4846a] animate-pulse" />
+            </div>
+            {!sidebarCollapsed && (
+              <div>
+                <h2 className="font-bold text-white text-lg tracking-tight">TaskFlow</h2>
+                <p className="text-[10px] text-[#d4846a] font-bold tracking-wider uppercase">Dashboard</p>
+              </div>
+            )}
+          </div>
+
+          <button 
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="mb-4 text-[#b5a69c] hover:text-white transition p-1 rounded-lg hover:bg-[#2d231e]/50"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+
+          <nav className="space-y-0.5 overflow-y-auto pr-1 flex-1">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -337,57 +732,74 @@ export default function PrototypePage() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                  className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20 translate-x-1'
-                      : 'text-slate-400 hover:className="bg-[#1E2A22]" hover:text-slate-200'
+                      ? 'bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] text-white shadow-md shadow-[#b35c44]/20'
+                      : 'text-[#b5a69c] hover:bg-[#2d231e]/80 hover:text-[#e5ddd8]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  {item.name}
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#b5a69c]'}`} />
+                  {!sidebarCollapsed && item.name}
                 </button>
               );
             })}
           </nav>
         </div>
 
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/90 border border-slate-800 shrink-0 mt-4">
-          <div className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
-    EL
+        <div className={`flex ${sidebarCollapsed ? 'flex-col items-center gap-2' : 'items-center gap-3'} p-3 rounded-xl bg-[#2d231e]/90 border border-[#3a2d26] shrink-0 mt-4`}>
+          <div className="w-9 h-9 rounded-lg bg-[#b35c44] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+            NV
           </div>
-          <div className="flex-1 overflow-hidden">
-            <h4 className="text-xs font-bold truncate text-white leading-tight">Elina</h4>
-            <p className="text-[11px] text-slate-400 truncate">elina@gmail.com</p>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="flex-1 overflow-hidden">
+              <h4 className="text-xs font-bold truncate text-white leading-tight">Nova</h4>
+              <p className="text-[11px] text-[#b5a69c] truncate">nova@gmail.com</p>
+            </div>
+          )}
         </div>
       </aside>
 
       {/* MAIN LAYOUT */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         {/* HEADER */}
-        <header className="px-8 py-3.5 border-b border-slate-200/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-4 shrink-0 z-20">
+        <header className="px-8 py-3.5 border-b border-[#e5ddd8]/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-4 shrink-0 z-20">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight capitalize">
-              {activeTab.replace('-', ' ')}
+            <h1 className="text-xl font-bold text-[#2d231e] tracking-tight capitalize flex items-center gap-2">
+              {activeTab === 'dashboard' && 'Dashboard'}
+              {activeTab === 'tasks' && 'My Tasks'}
+              {activeTab === 'projects' && 'Projects'}
+              {activeTab === 'calendar' && 'Calendar'}
+              {activeTab === 'team' && 'Team'}
+              {activeTab === 'messages' && 'Messages'}
+              {activeTab === 'files' && 'Files'}
+              {activeTab === 'reports' && 'Reports'}
+              {activeTab === 'notifications' && 'Notifications'}
+              {activeTab === 'profile' && 'Profile'}
+              {activeTab === 'settings' && 'Settings'}
+              {activeTab === 'dashboard' && (
+                <span className="text-sm font-normal text-[#b5a69c] ml-2">Welcome back, Nova! 🎉</span>
+              )}
             </h1>
-            <p className="text-xs text-slate-500">Workspace Overview for the projects</p>
+            {activeTab === 'dashboard' && (
+              <p className="text-xs text-[#b5a69c]">Here&apos;s what&apos;s happening with your tasks today.</p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-100/80 px-3 py-1.5 rounded-xl border border-slate-200/80 w-64 focus-within:ring-2 focus-within:ring-indigo-500/20 transition">
-              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 bg-[#f5f0ec]/80 px-3 py-1.5 rounded-xl border border-[#e5ddd8]/80 w-64 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition">
+              <Search className="w-4 h-4 text-[#b5a69c] shrink-0" />
               <input
                 type="text"
-                placeholder="Search workspace..."
-                className="bg-transparent text-xs text-slate-800 focus:outline-none w-full placeholder:text-slate-400 font-medium"
+                placeholder="Search..."
+                className="bg-transparent text-xs text-[#2d231e] focus:outline-none w-full placeholder:text-[#b5a69c] font-medium"
               />
             </div>
 
-            <button className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition shadow-sm">
+            <button className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
               <Filter className="w-3.5 h-3.5" /> Filter
             </button>
 
-            <button className="relative p-2 text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition shadow-sm">
+            <button className="relative p-2 text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
               <Bell className="w-4 h-4" />
               <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
                 3
@@ -396,62 +808,59 @@ export default function PrototypePage() {
 
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-xl shadow-md shadow-indigo-500/20 transition active:scale-95"
+              className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95"
             >
               <Plus className="w-4 h-4" /> New Task
             </button>
 
-            {/* USER PROFILE DROPDOWN MENU */}
-            <div className="relative border-l border-slate-200 pl-3">
+            {/* Profile Dropdown */}
+            <div className="relative border-l border-[#e5ddd8] pl-3">
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100/80 transition"
+                className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-[#f5f0ec]/80 transition"
               >
                 <div className="relative">
-                  <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-extrabold flex items-center justify-center text-xs border border-purple-200 shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-[#f0e4dc] text-[#8f6b5c] font-extrabold flex items-center justify-center text-xs border border-[#e5d5cb] shadow-sm">
                     NV
                   </div>
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                 </div>
                 <div className="text-left hidden sm:block">
-                  <h4 className="text-xs font-bold text-slate-900 leading-none">Elina</h4>
-                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Project Manager</p>
+                  <h4 className="text-xs font-bold text-[#2d231e] leading-none">Nova</h4>
+                  <p className="text-[10px] text-[#b5a69c] font-medium mt-0.5">Project Manager</p>
                 </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-[#b5a69c] transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* DROPDOWN MENU CONTENT */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200/80 py-2 z-50 text-xs text-slate-700">
-                  <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="font-bold text-slate-900">Elina</p>
-                    <p className="text-[10px] text-slate-400 font-mono">Elina@gmail.com</p>
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#e5ddd8]/80 py-2 z-50 text-xs text-[#2d231e]">
+                  <div className="px-4 py-2 border-b border-[#f5f0ec]">
+                    <p className="font-bold text-[#2d231e]">Nova</p>
+                    <p className="text-[10px] text-[#b5a69c] font-mono">nova@gmail.com</p>
                   </div>
-
                   <div className="py-1">
-                    <button
-                      onClick={() => { setActiveTab('profile'); setIsProfileMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5 font-medium transition"
+                    <button 
+                      onClick={() => handleProfileAction('profile')}
+                      className="w-full text-left px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
-                      <User className="w-3.5 h-3.5 text-slate-400" /> View Profile
+                      <User className="w-3.5 h-3.5 text-[#b5a69c]" /> View Profile
                     </button>
-                    <button
-                      onClick={() => { setActiveTab('settings'); setIsProfileMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5 font-medium transition"
+                    <button 
+                      onClick={() => handleProfileAction('settings')}
+                      className="w-full text-left px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
-                      <Settings className="w-3.5 h-3.5 text-slate-400" /> Account Settings
+                      <Settings className="w-3.5 h-3.5 text-[#b5a69c]" /> Account Settings
                     </button>
-                    <button
-                      onClick={() => { setActiveTab('notifications'); setIsProfileMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5 font-medium transition"
+                    <button 
+                      onClick={() => handleProfileAction('notifications')}
+                      className="w-full text-left px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
-                      <Bell className="w-3.5 h-3.5 text-slate-400" /> Notification Preferences
+                      <Bell className="w-3.5 h-3.5 text-[#b5a69c]" /> Notification Preferences
                     </button>
                   </div>
-
-                  <div className="border-t border-slate-100 pt-1 mt-1">
-                    <button
-                      onClick={() => setIsProfileMenuOpen(false)}
+                  <div className="border-t border-[#f5f0ec] pt-1 mt-1">
+                    <button 
+                      onClick={() => handleProfileAction('logout')}
                       className="w-full text-left px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2.5 font-semibold transition"
                     >
                       <LogOut className="w-3.5 h-3.5 text-rose-500" /> Log Out
@@ -463,42 +872,381 @@ export default function PrototypePage() {
           </div>
         </header>
 
-        {/* MAIN CONTENT AREA */}
+        {/* MAIN CONTENT */}
         <main className="p-6 flex-1 overflow-y-auto min-h-0 space-y-6">
-          {/* 1. CALENDAR TAB */}
+          {/* DASHBOARD */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Total Tasks</p>
+                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">35</h3>
+                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+                        <ArrowUpRight className="w-3 h-3" /> 12% from last week
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] border border-[#e5d5cb]">
+                      <ListTodo className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Pending Tasks</p>
+                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">14</h3>
+                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+                        <ArrowUpRight className="w-3 h-3" /> 5% from last week
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">In Progress</p>
+                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">11</h3>
+                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+                        <ArrowUpRight className="w-3 h-3" /> 8% from last week
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                      <Activity className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Completed</p>
+                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">10</h3>
+                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+                        <ArrowUpRight className="w-3 h-3" /> 20% from last week
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chart + Deadlines */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm lg:col-span-2">
+                  <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-3 mb-4">
+                    <h3 className="font-bold text-[#2d231e] text-sm flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-[#b35c44]" /> Task Overview
+                    </h3>
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#b35c44]" /> Completed
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#d4846a]" /> Created
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={CHART_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0ece8" />
+                        <XAxis dataKey="name" stroke="#b5a69c" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#b5a69c" fontSize={11} tickLine={false} />
+                        <Tooltip content={<CustomChartTooltip />} />
+                        <Bar dataKey="completed" fill="#b35c44" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="created" fill="#d4846a" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Upcoming Deadlines */}
+                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                  <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-[#b35c44]" /> Upcoming Deadlines
+                  </h3>
+                  <div className="space-y-3">
+                    {UPCOMING_DEADLINES.map((deadline) => (
+                      <div key={deadline.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#f5f0ec]/50 transition">
+                        <div className="w-12 h-12 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] flex flex-col items-center justify-center shrink-0">
+                          <span className="text-[9px] font-bold">{deadline.month}</span>
+                          <span className="text-base font-black">{deadline.day}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-[#2d231e] truncate">{deadline.title}</p>
+                          <p className="text-[10px] text-[#b5a69c] font-medium">{deadline.daysUntil}</p>
+                        </div>
+                        <Flag className="w-3.5 h-3.5 text-[#b5a69c]" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tasks Due Today + Team Activity */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                  <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
+                    <Clock4 className="w-4 h-4 text-[#b35c44]" /> Tasks Due Today
+                  </h3>
+                  <div className="space-y-3">
+                    {tasks.filter(t => t.due === '2026-05-21').map((task) => (
+                      <div key={task.id} className="flex items-center justify-between p-2 rounded-xl hover:bg-[#f5f0ec]/50 transition">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-1.5 h-8 rounded-full ${task.priority === 'HIGH' ? 'bg-amber-500' : task.priority === 'URGENT' ? 'bg-rose-500' : 'bg-blue-400'}`}></div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-[#2d231e] truncate">{task.title}</p>
+                            <p className="text-[10px] text-[#b5a69c]">{task.category}</p>
+                          </div>
+                        </div>
+                        {getPriorityBadge(task.priority)}
+                      </div>
+                    ))}
+                    {tasks.filter(t => t.due === '2026-05-21').length === 0 && (
+                      <p className="text-xs text-[#b5a69c] text-center py-4">No tasks due today 🎉</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                  <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#b35c44]" /> Team Activity
+                  </h3>
+                  <div className="space-y-3">
+                    {teamMembers.slice(0, 3).map((member) => (
+                      <div key={member.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-[#f5f0ec]/50 transition">
+                        <div className={`w-8 h-8 rounded-full ${member.gradient} flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-sm`}>
+                          {member.initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-[#2d231e]">
+                            <span className="font-bold">{member.name}</span>
+                            <span className="text-[#b5a69c]"> • {member.role}</span>
+                          </p>
+                          <p className="text-[10px] text-[#b5a69c]">{member.email}</p>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${getStatusTextColor(member.status)}`}>
+                            {member.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Projects Overview */}
+              <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
+                  <FolderKanban className="w-4 h-4 text-[#b35c44]" /> Projects Overview
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {PROJECTS_DATA.map((project) => {
+                    const Icon = project.icon;
+                    return (
+                      <div key={project.id} className="p-3 rounded-xl border border-[#e5ddd8]/60 hover:shadow-md transition">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`p-2 rounded-lg text-white`} style={{ backgroundColor: project.color }}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span className="text-xs font-bold text-[#2d231e] truncate flex-1">{project.name}</span>
+                        </div>
+                        <p className="text-[11px] text-[#b5a69c] mb-1.5">{project.completedTasks} / {project.totalTasks} tasks</p>
+                        <div className="w-full bg-[#f5f0ec] h-1.5 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${project.progress}%`, backgroundColor: project.color }} />
+                        </div>
+                        <p className="text-[10px] font-bold mt-1" style={{ color: project.color }}>{project.progress}%</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TEAM - Updated with roles, emails and colorful design */}
+          {activeTab === 'team' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {teamMembers.map((member) => (
+                <div key={member.id} className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-16 h-16 rounded-2xl ${member.gradient} flex items-center justify-center font-extrabold text-xl text-white shadow-md shrink-0`}>
+                      {member.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-[#2d231e] text-base">{member.name}</h3>
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusTextColor(member.status)} border ${member.status === 'Active' ? 'border-emerald-200' : member.status === 'In Meeting' ? 'border-amber-200' : member.status === 'Busy' ? 'border-rose-200' : 'border-slate-200'}`}>
+                          <span className={`inline-block w-1.5 h-1.5 rounded-full ${getStatusColor(member.status)} mr-1 animate-pulse`}></span>
+                          {member.status}
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-[#b35c44]">{member.role}</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#6b5a4e]">
+                        <Mail className="w-3.5 h-3.5 text-[#b5a69c]" />
+                        <span className="truncate">{member.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-[#6b5a4e]">
+                        <Phone className="w-3.5 h-3.5 text-[#b5a69c]" />
+                        <span>{member.phone}</span>
+                      </div>
+                      <div className="mt-3 space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-[#b5a69c]">Capacity</span>
+                          <span className="font-bold text-[#2d231e]">{member.capacity}%</span>
+                        </div>
+                        <div className="w-full bg-[#f5f0ec] h-2 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${member.barColor}`} style={{ width: `${member.capacity}%` }} />
+                        </div>
+                      </div>
+                      <div className="flex gap-4 mt-2 text-xs">
+                        <div>
+                          <span className="text-[#b5a69c]">Active Tasks</span>
+                          <p className="font-bold text-[#2d231e]">{member.activeTasks}</p>
+                        </div>
+                        <div>
+                          <span className="text-[#b5a69c]">Completed</span>
+                          <p className="font-bold text-[#2d231e]">{member.completedTasks}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* MY TASKS */}
+          {activeTab === 'tasks' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {['ALL', 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setTaskFilter(status as any)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+                        taskFilter === status
+                          ? 'bg-[#b35c44] text-white shadow-xs'
+                          : 'bg-white text-[#2d231e] border border-[#e5ddd8] hover:bg-[#f5f0ec]'
+                      }`}
+                    >
+                      {status.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl transition"
+                >
+                  <Plus className="w-3.5 h-3.5" /> New Task
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm overflow-hidden">
+                <div className="divide-y divide-[#f5f0ec]">
+                  {filteredTasks.length === 0 ? (
+                    <div className="p-8 text-center text-sm text-[#b5a69c]">
+                      No tasks found in this category
+                    </div>
+                  ) : (
+                    filteredTasks.map((task) => (
+                      <div key={task.id} className="p-4 flex items-center justify-between hover:bg-[#f5f0ec]/50 transition">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-sm text-[#2d231e]">{task.title}</h4>
+                            {getPriorityBadge(task.priority)}
+                            {getStatusBadge(task.status)}
+                          </div>
+                          <p className="text-[11px] text-[#b5a69c] font-medium">
+                            Category: {task.category} • Due {task.due} • Assignee: {task.assignee || 'Unassigned'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button className="p-1.5 text-[#b5a69c] hover:text-[#b35c44] rounded-lg hover:bg-[#f5f0ec] transition">
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button className="p-1.5 text-[#b5a69c] hover:text-emerald-600 rounded-lg hover:bg-[#f5f0ec] transition">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PROJECTS */}
+          {activeTab === 'projects' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {PROJECTS_DATA.map((project) => {
+                const Icon = project.icon;
+                return (
+                  <div key={project.id} className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm space-y-4 hover:shadow-md transition">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2.5 rounded-xl text-white`} style={{ backgroundColor: project.color }}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm text-[#2d231e]">{project.name}</h3>
+                        <p className="text-xs text-[#b5a69c]">{project.completedTasks} / {project.totalTasks} tasks</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="text-[#b5a69c]">Progress</span>
+                        <span className="text-[#2d231e] font-mono">{project.progress}%</span>
+                      </div>
+                      <div className="w-full bg-[#f5f0ec] h-2 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${project.progress}%`, backgroundColor: project.color }} />
+                      </div>
+                    </div>
+                    <button className="w-full py-1.5 text-xs font-semibold text-white rounded-xl transition" style={{ backgroundColor: project.color }}>
+                      View Project
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* CALENDAR */}
           {activeTab === 'calendar' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden w-full max-w-5xl mx-auto">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm overflow-hidden w-full max-w-5xl mx-auto">
+              <div className="px-6 py-4 border-b border-[#f5f0ec] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-bold text-slate-900">August 2026</h2>
-                  <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200/60">
-                    <button className="p-1 text-slate-600 hover:bg-white rounded transition">
+                  <h2 className="text-lg font-bold text-[#2d231e]">May 2026</h2>
+                  <div className="flex items-center bg-[#f5f0ec] rounded-lg p-0.5 border border-[#e5ddd8]/60">
+                    <button className="p-1 text-[#2d231e] hover:bg-white rounded transition">
                       <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <button className="px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-white rounded transition">
+                    <button className="px-2.5 py-1 text-xs font-bold text-white bg-[#b35c44] rounded transition">
                       Today
                     </button>
-                    <button className="p-1 text-slate-600 hover:bg-white rounded transition">
+                    <button className="p-1 text-[#2d231e] hover:bg-white rounded transition">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100">
-                    Month
-                  </span>
-                  <span className="text-xs font-semibold px-3 py-1 text-slate-500 hover:bg-slate-100 rounded-lg transition cursor-pointer">
-                    Week
-                  </span>
-                  <span className="text-xs font-semibold px-3 py-1 text-slate-500 hover:bg-slate-100 rounded-lg transition cursor-pointer">
-                    Day
-                  </span>
+                  <span className="text-xs font-semibold px-3 py-1 bg-[#f0e4dc] text-[#8f6b5c] rounded-lg border border-[#e5d5cb]">Month</span>
+                  <span className="text-xs font-semibold px-3 py-1 text-[#b5a69c] hover:bg-[#f5f0ec] rounded-lg transition cursor-pointer">Week</span>
+                  <span className="text-xs font-semibold px-3 py-1 text-[#b5a69c] hover:bg-[#f5f0ec] rounded-lg transition cursor-pointer">Day</span>
                 </div>
               </div>
-
               <div className="p-4">
-                <div className="grid grid-cols-7 mb-2 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="grid grid-cols-7 mb-2 text-center text-[10px] font-bold text-[#b5a69c] uppercase tracking-wider">
                   <div>Sun</div>
                   <div>Mon</div>
                   <div>Tue</div>
@@ -507,268 +1255,125 @@ export default function PrototypePage() {
                   <div>Fri</div>
                   <div>Sat</div>
                 </div>
-
-                <div className="grid grid-cols-7 rounded-xl overflow-hidden border border-slate-200/80">
+                <div className="grid grid-cols-7 rounded-xl overflow-hidden border border-[#e5ddd8]/80">
                   {renderCalendarDays()}
                 </div>
               </div>
             </div>
           )}
 
-          {/* 2. DASHBOARD TAB */}
-          {activeTab === 'dashboard' && (
-            <div className="space-y-6">
-              {/* TOP STATUS CARDS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Tasks</p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {tasks.length + TASKS_DUE_THIS_WEEK.length}
-                    </h3>
-                  </div>
-                  <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                    <CheckSquare className="w-5 h-5" />
+          {/* MESSAGES */}
+          {activeTab === 'messages' && (
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-3xl mx-auto">
+              <div className="flex items-center gap-3 border-b border-[#f5f0ec] pb-4 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#b35c44] to-[#d4846a] text-white flex items-center justify-center font-bold shadow-sm">
+                  JD
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#2d231e] text-sm">Jane Doe</h3>
+                  <p className="text-[10px] text-emerald-600">Online</p>
+                </div>
+              </div>
+              <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
+                <div className="flex justify-start">
+                  <div className="bg-[#f5f0ec] rounded-2xl rounded-tl-none px-4 py-2 max-w-[70%]">
+                    <p className="text-xs text-[#2d231e]">Hey! How&apos;s the UI design coming along?</p>
+                    <p className="text-[9px] text-[#b5a69c] mt-0.5">10:30 AM</p>
                   </div>
                 </div>
-
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pending Tasks</p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {tasks.filter((t) => t.status === 'PENDING').length + TASKS_DUE_THIS_WEEK.filter((t) => t.status === 'PENDING').length}
-                    </h3>
-                  </div>
-                  <div className="p-3 rounded-xl bg-rose-50 text-rose-600 border border-rose-100">
-                    <AlertCircle className="w-5 h-5" />
+                <div className="flex justify-end">
+                  <div className="bg-[#b35c44] text-white rounded-2xl rounded-tr-none px-4 py-2 max-w-[70%]">
+                    <p className="text-xs">Almost done! Just finishing the dashboard layout.</p>
+                    <p className="text-[9px] text-[#d4846a] mt-0.5">10:32 AM</p>
                   </div>
                 </div>
-
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">In Progress</p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {tasks.filter((t) => t.status === 'IN_PROGRESS').length + TASKS_DUE_THIS_WEEK.filter((t) => t.status === 'IN_PROGRESS').length}
-                    </h3>
-                  </div>
-                  <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Completed Tasks</p>
-                    <h3 className="text-2xl font-black text-slate-900 mt-1">
-                      {tasks.filter((t) => t.status === 'COMPLETED').length + TASKS_DUE_THIS_WEEK.filter((t) => t.status === 'COMPLETED').length}
-                    </h3>
-                  </div>
-                  <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                    <CheckCircle2 className="w-5 h-5" />
+                <div className="flex justify-start">
+                  <div className="bg-[#f5f0ec] rounded-2xl rounded-tl-none px-4 py-2 max-w-[70%]">
+                    <p className="text-xs text-[#2d231e]">Great! Can you share the prototype by EOD?</p>
+                    <p className="text-[9px] text-[#b5a69c] mt-0.5">10:35 AM</p>
                   </div>
                 </div>
               </div>
-
-              {/* GRID TOP: CHART + PROJECTS */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-2 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                        <TrendingUp className="w-3.5 h-3.5 text-indigo-600" /> Task Activity Trend
-                      </h3>
-                    </div>
-
-                    <div className="relative flex items-center">
-                      <select
-                        value={selectedWeek}
-                        onChange={(e) => setSelectedWeek(e.target.value)}
-                        className="appearance-none bg-slate-50 text-slate-700 text-xs font-bold pl-3 pr-8 py-1.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-                      >
-                        {WEEKS.map((week) => (
-                          <option key={week} value={week}>
-                            {week}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  <div className="h-60 w-full pt-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={CHART_DATA} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#4F46E5" stopOpacity={0.0} />
-                          </linearGradient>
-                          <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#E11D48" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="#E11D48" stopOpacity={0.0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                        <XAxis dataKey="name" stroke="#94A3B8" fontSize={11} tickLine={false} />
-                        <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} />
-                        <Tooltip content={<CustomChartTooltip />} />
-                        <Area
-                          type="monotone"
-                          dataKey="completed"
-                          name="Completed"
-                          stroke="#4F46E5"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorCompleted)"
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="pending"
-                          name="Pending"
-                          stroke="#E11D48"
-                          strokeWidth={2}
-                          strokeDasharray="3 3"
-                          fillOpacity={1}
-                          fill="url(#colorPending)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-4 text-[11px] font-semibold text-slate-500 pt-2 border-t border-slate-50">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-indigo-600" /> Completed
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-rose-500" /> Pending
-                    </span>
-                  </div>
-                </div>
-
-                {/* PROJECTS OVERVIEW */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 lg:col-span-1">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="font-bold text-slate-900 text-sm">Projects Overview</h3>
-                    <button
-                      onClick={() => setActiveTab('projects')}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-                    >
-                      View all
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {OVERVIEW_PROJECTS.map((item) => {
-                      const IconComponent = item.icon;
-                      return (
-                        <div key={item.id} className="space-y-1.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2">
-                              <div className={`p-1.5 rounded-lg text-white ${item.iconBg}`}>
-                                <IconComponent className="w-3.5 h-3.5" />
-                              </div>
-                              <span className="font-bold text-slate-800 truncate max-w-[130px]">{item.title}</span>
-                            </div>
-                            <span className="font-mono text-slate-500 font-semibold">{item.progress}%</span>
-                          </div>
-                          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${item.barBg}`} style={{ width: `${item.progress}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 border-t border-[#f5f0ec] pt-4">
+                <button className="p-2 text-[#b5a69c] hover:text-[#b35c44] transition">
+                  <Paperclip className="w-4 h-4" />
+                </button>
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  className="flex-1 bg-[#f5f0ec] rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20"
+                />
+                <button className="p-2 bg-[#b35c44] text-white rounded-xl hover:bg-[#a04f3a] transition">
+                  <Send className="w-4 h-4" />
+                </button>
               </div>
             </div>
           )}
 
-
-          {/* 3. FILES TAB */}
+          {/* FILES */}
           {activeTab === 'files' && (
-            <div className="space-y-6">
-              {/* FILE STATS & UPLOAD HEADER */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div className="space-y-4">
+              <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-4">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Storage Used</p>
-                    <h3 className="text-xl font-black text-slate-900 mt-1">16.7 MB / 10 GB</h3>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Total Files</p>
+                    <h3 className="text-xl font-black text-[#2d231e]">{files.length}</h3>
                   </div>
-                  <div className="p-3 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
-                    <HardDrive className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Files</p>
-                    <h3 className="text-xl font-black text-slate-900 mt-1">{files.length}</h3>
-                  </div>
-                  <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                  <div className="p-3 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] border border-[#e5d5cb]">
                     <FileText className="w-5 h-5" />
                   </div>
                 </div>
-
-                {/* QUICK UPLOAD FORM */}
-                <form onSubmit={handleFileUpload} className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <input
-                    type="text"
-                    placeholder="New file name..."
-                    value={uploadFileName}
-                    onChange={(e) => setUploadFileName(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
                   />
-                  <button
-                    type="submit"
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white font-semibold text-xs rounded-xl hover:bg-indigo-700 transition shadow-xs shrink-0"
+                  <button 
+                    onClick={handleFileUpload}
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl transition shadow-sm"
                   >
-                    <Upload className="w-3.5 h-3.5" /> Upload
+                    <Upload className="w-4 h-4" /> Upload File
                   </button>
-                </form>
+                </div>
               </div>
 
-              {/* FILES LIST TABLE */}
-              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-900 text-sm">Workspace Files & Attachments</h3>
-                  <span className="text-xs text-slate-400 font-medium">{files.length} items</span>
+              <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-[#f5f0ec] flex items-center justify-between">
+                  <h3 className="font-bold text-[#2d231e] text-sm">Workspace Files</h3>
+                  <span className="text-xs text-[#b5a69c] font-medium">{files.length} items</span>
                 </div>
-
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left border-collapse min-w-[600px]">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[500px]">
                     <thead>
-                      <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                      <tr className="bg-[#f5f0ec]/50 border-b border-[#e5ddd8] text-[10px] uppercase font-bold text-[#b5a69c] tracking-wider">
                         <th className="p-3.5 pl-5">Name</th>
                         <th className="p-3.5">Size</th>
                         <th className="p-3.5">Uploaded By</th>
-                        <th className="p-3.5">Date</th>
                         <th className="p-3.5 text-right pr-5">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                    <tbody className="divide-y divide-[#f5f0ec] text-xs text-[#2d231e]">
                       {files.map((file) => {
                         const Icon = file.icon;
                         return (
-                          <tr key={file.id} className="hover:bg-slate-50/60 transition group">
-                            <td className="p-3.5 pl-5 font-semibold text-slate-900 flex items-center gap-3">
-                              <div className={`p-2 rounded-lg border border-slate-200/60 ${file.color} shrink-0`}>
+                          <tr key={file.id} className="hover:bg-[#f5f0ec]/50 transition group">
+                            <td className="p-3.5 pl-5 font-semibold flex items-center gap-3">
+                              <div className={`p-2 rounded-lg border border-[#e5ddd8]/60 ${file.color} shrink-0`}>
                                 <Icon className="w-4 h-4" />
                               </div>
                               <span className="truncate max-w-xs">{file.name}</span>
                             </td>
-                            <td className="p-3.5 font-mono text-slate-500 whitespace-nowrap">{file.size}</td>
-                            <td className="p-3.5 font-medium whitespace-nowrap">{file.uploader}</td>
-                            <td className="p-3.5 text-slate-400 whitespace-nowrap">{file.date}</td>
-                            <td className="p-3.5 pr-5 text-right whitespace-nowrap space-x-2">
-                              <button className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100 transition">
-                                <Eye className="w-3.5 h-3.5" />
-                              </button>
-                              <button className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition">
+                            <td className="p-3.5 font-mono text-[#b5a69c]">{file.size}</td>
+                            <td className="p-3.5 font-medium">{file.uploader}</td>
+                            <td className="p-3.5 pr-5 text-right space-x-2">
+                              <button className="p-1.5 text-[#b5a69c] hover:text-[#b35c44] rounded-lg hover:bg-[#f5f0ec] transition">
                                 <Download className="w-3.5 h-3.5" />
                               </button>
-                              <button
+                              <button 
                                 onClick={() => handleDeleteFile(file.id)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                                className="p-1.5 text-[#b5a69c] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -783,150 +1388,104 @@ export default function PrototypePage() {
             </div>
           )}
 
-          {/* 4. MY TASKS TAB */}
-          {activeTab === 'tasks' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED'].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setFilterStatus(status)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                        filterStatus === status
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      {status.replace('_', ' ')}
-                    </button>
-                  ))}
+          {/* REPORTS */}
+          {activeTab === 'reports' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Task Completion Rate</p>
+                  <h3 className="text-3xl font-black text-[#2d231e] mt-1">87%</h3>
+                  <p className="text-xs text-emerald-600">↑ 12% from last month</p>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Avg. Task Duration</p>
+                  <h3 className="text-3xl font-black text-[#2d231e] mt-1">2.4d</h3>
+                  <p className="text-xs text-emerald-600">↓ 8% from last month</p>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Team Productivity</p>
+                  <h3 className="text-3xl font-black text-[#2d231e] mt-1">92%</h3>
+                  <p className="text-xs text-emerald-600">↑ 5% from last month</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <div className="divide-y divide-slate-100">
-                  {filteredTasks.map((task) => (
-                    <div key={task.id} className="p-4 flex items-center justify-between hover:bg-slate-50/60 transition">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-xs text-slate-900">{task.title}</h4>
-                          {getPriorityBadge(task.priority)}
-                        </div>
-                        <p className="text-[11px] text-slate-400 font-medium">Category: {task.category} • Due {task.due}</p>
-                      </div>
-                      <div>{getStatusIndicator(task.status)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 5. PROJECTS TAB */}
-          {activeTab === 'projects' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {PROJECTS.map((proj) => (
-                <div key={proj.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 hover:shadow-md transition">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
-                      {proj.status}
+              <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-3 mb-4">
+                  <h3 className="font-bold text-[#2d231e] text-sm">Task Completion & Pending Trend</h3>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 rounded-full bg-[#b35c44]"></span>
+                      <span className="text-[#b5a69c]">Completed</span>
                     </span>
-                    <span className="font-mono text-xs font-bold text-slate-500">{proj.budget}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900">{proj.name}</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">{proj.members} Members assigned</p>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-slate-500">Progress</span>
-                      <span className="text-slate-900 font-mono">{proj.progress}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-indigo-600 h-full rounded-full" style={{ width: `${proj.progress}%` }} />
-                    </div>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 rounded-full bg-[#d4846a]"></span>
+                      <span className="text-[#b5a69c]">Pending</span>
+                    </span>
                   </div>
                 </div>
-              ))}
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={WEEKLY_TREND_DATA} margin={{ top: 10, right: 30, left: -10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0ece8" />
+                      <XAxis dataKey="week" stroke="#b5a69c" fontSize={11} tickLine={false} />
+                      <YAxis stroke="#b5a69c" fontSize={11} tickLine={false} />
+                      <Tooltip content={<CustomChartTooltip />} />
+                      <Legend 
+                        wrapperStyle={{ fontSize: '11px', color: '#b5a69c' }}
+                        iconType="circle"
+                        iconSize={8}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="completed" 
+                        stroke="#b35c44" 
+                        strokeWidth={3}
+                        dot={{ fill: '#b35c44', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="pending" 
+                        stroke="#d4846a" 
+                        strokeWidth={3}
+                        strokeDasharray="5 5"
+                        dot={{ fill: '#d4846a', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* 6. TEAM TAB */}
-          {activeTab === 'team' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {TEAM_WORKLOAD.map((member) => (
-                <div key={member.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-sm shrink-0 ${member.badgeBg}`}>
-                    {member.initials}
-                  </div>
-                  <div className="flex-1 space-y-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-slate-900 text-sm truncate">{member.name}</h3>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">{member.status}</span>
-                    </div>
-                    <p className="text-xs text-slate-500 font-medium truncate">{member.role}</p>
-                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-2">
-                      <div className={`h-full ${member.barColor}`} style={{ width: `${member.capacity}%` }} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 7. NOTIFICATIONS TAB */}
-          {activeTab === 'notifications' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 max-w-2xl mx-auto space-y-4">
-              <h3 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-3">Recent Notifications</h3>
+          {/* NOTIFICATIONS */}
+          {activeTab === 'notifications' && !profileView && (
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-5 max-w-2xl mx-auto space-y-4">
+              <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 flex items-center gap-2">
+                <Bell className="w-4 h-4 text-[#b35c44]" /> Recent Notifications
+              </h3>
               <div className="space-y-3">
-                <div className="flex gap-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                  <Bell className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                <div className="flex gap-3 p-3 bg-[#f0e4dc]/30 rounded-xl border border-[#e5d5cb]/60">
+                  <Sparkles className="w-4 h-4 text-[#b35c44] shrink-0 mt-0.5" />
                   <div className="text-xs space-y-0.5">
-                    <p className="font-bold text-slate-900">Sprint Review Scheduled</p>
-                    <p className="text-slate-500">Nova added a new calendar entry for August 18th.</p>
+                    <p className="font-bold text-[#2d231e]">Sprint Review Scheduled</p>
+                    <p className="text-[#b5a69c]">Nova added a new calendar entry for May 21st.</p>
                   </div>
                 </div>
                 <div className="flex gap-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
                   <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <div className="text-xs space-y-0.5">
-                    <p className="font-bold text-slate-900">Task Completed</p>
-                    <p className="text-slate-500">Jane marked 'MySQL Connection Pool' as completed.</p>
+                    <p className="font-bold text-[#2d231e]">Task Completed</p>
+                    <p className="text-[#b5a69c]">Jane marked &apos;Landing Page Design&apos; as completed.</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* 8. SETTINGS & PROFILE TAB */}
-          {(activeTab === 'settings' || activeTab === 'profile') && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 max-w-2xl mx-auto space-y-6">
-              <div className="flex items-center gap-4 border-b border-slate-100 pb-5">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                  EL
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Elina Admin</h2>
-                  <p className="text-xs text-slate-400 font-medium">admin@taskpulse.io • Project Director</p>
-                </div>
-              </div>
-
-              <div className="space-y-4 text-xs">
-                <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400">Account Settings</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700">Display Name</label>
-                    <input type="text" defaultValue="Elina" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                <div className="flex gap-3 p-3 bg-amber-50/50 rounded-xl border border-amber-100">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="text-xs space-y-0.5">
+                    <p className="font-bold text-[#2d231e]">Upcoming Deadline</p>
+                    <p className="text-[#b5a69c]">Project Proposal is due tomorrow!</p>
                   </div>
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700">Email Address</label>
-                    <input type="email" defaultValue="admin@taskpulse.io" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
-                  </div>
-                </div>
-                <div className="pt-2">
-                  <button className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm">
-                    Save Changes
-                  </button>
                 </div>
               </div>
             </div>
@@ -936,49 +1495,51 @@ export default function PrototypePage() {
 
       {/* CREATE TASK MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-sm">Create New Task</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2d231e]/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#e5ddd8] w-full max-w-md p-6 space-y-4 animate-in">
+            <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-3">
+              <h3 className="font-bold text-[#2d231e] text-sm">Create New Task</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-[#b5a69c] hover:text-[#2d231e]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateTask} className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Task Title</label>
+                <label className="font-semibold text-[#2d231e]">Task Title</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Refactor API Router"
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Category</label>
+                  <label className="font-semibold text-[#2d231e]">Category</label>
                   <select
                     value={newTaskCategory}
                     onChange={(e) => setNewTaskCategory(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20"
                   >
-                    <option value="Frontend">Frontend</option>
+                    <option value="Design">Design</option>
                     <option value="Backend">Backend</option>
+                    <option value="Frontend">Frontend</option>
                     <option value="Database">Database</option>
-                    <option value="UI/UX Design">UI/UX Design</option>
+                    <option value="Management">Management</option>
+                    <option value="Docs">Docs</option>
                   </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Priority</label>
+                  <label className="font-semibold text-[#2d231e]">Priority</label>
                   <select
                     value={newTaskPriority}
                     onChange={(e) => setNewTaskPriority(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20"
                   >
                     <option value="LOW">LOW</option>
                     <option value="MEDIUM">MEDIUM</option>
@@ -992,13 +1553,13 @@ export default function PrototypePage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+                  className="px-4 py-2 font-semibold text-[#2d231e] bg-[#f5f0ec] hover:bg-[#e5ddd8] rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-500/20 transition"
+                  className="px-4 py-2 font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl shadow-md shadow-[#b35c44]/20 transition"
                 >
                   Create Task
                 </button>
