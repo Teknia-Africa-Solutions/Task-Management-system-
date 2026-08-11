@@ -1073,6 +1073,177 @@ export default function Home() {
             </div>
           )}
 
+          {/* PROFILE VIEW */}
+          {activeTab === 'profile' && (
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 border-b border-[#f5f0ec] pb-5">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#b35c44] to-[#d4846a] text-white font-black text-3xl flex items-center justify-center shadow-lg shadow-[#b35c44]/20 shrink-0">
+                  NV
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#2d231e]">Nova</h2>
+                  <p className="text-sm text-[#b5a69c] font-medium">Project Manager • TaskFlow Team</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-semibold">Active</span>
+                    <span className="text-xs text-[#b5a69c]">Joined Jan 2026</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5a69c]">Email</p>
+                    <p className="text-sm font-medium text-[#2d231e]">nova@gmail.com</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5a69c]">Role</p>
+                    <p className="text-sm font-medium text-[#2d231e]">Project Manager</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5a69c]">Team</p>
+                    <p className="text-sm font-medium text-[#2d231e]">TaskFlow Team</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5a69c]">Tasks Completed</p>
+                    <p className="text-sm font-medium text-[#2d231e]">24</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setActiveTab('dashboard')}
+                    className="px-4 py-2 bg-[#b35c44] text-white font-semibold rounded-xl hover:bg-[#a04f3a] transition shadow-sm"
+                  >
+                    Back to Dashboard
+                  </button>
+                  <button 
+                    onClick={() => handleProfileAction('settings')}
+                    className="px-4 py-2 font-semibold text-[#2d231e] bg-[#f5f0ec] hover:bg-[#e5ddd8] rounded-xl transition"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SETTINGS VIEW */}
+          {activeTab === 'settings' && (
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-2xl mx-auto">
+              <h2 className="text-lg font-bold text-[#2d231e] border-b border-[#f5f0ec] pb-4 mb-4">Account Settings</h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-semibold text-sm text-[#2d231e]">Display Name</label>
+                    <input type="text" defaultValue="Nova" className="w-full bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl p-2.5 text-sm font-medium text-[#2d231e] focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-semibold text-sm text-[#2d231e]">Email Address</label>
+                    <input type="email" defaultValue="nova@gmail.com" className="w-full bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl p-2.5 text-sm font-medium text-[#2d231e] focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-semibold text-sm text-[#2d231e]">Time Zone</label>
+                  <select className="w-full bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl p-2.5 text-sm font-medium text-[#2d231e] focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20">
+                    <option>Eastern Time (ET)</option>
+                    <option>Central Time (CT)</option>
+                    <option>Mountain Time (MT)</option>
+                    <option>Pacific Time (PT)</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-semibold text-sm text-[#2d231e]">Language</label>
+                  <select className="w-full bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl p-2.5 text-sm font-medium text-[#2d231e] focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20">
+                    <option>English</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                    <option>German</option>
+                  </select>
+                </div>
+                <div className="pt-2 flex gap-3">
+                  <button className="px-4 py-2 bg-[#b35c44] text-white font-semibold rounded-xl hover:bg-[#a04f3a] transition shadow-sm">
+                    Save Changes
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('dashboard')}
+                    className="px-4 py-2 font-semibold text-[#2d231e] bg-[#f5f0ec] hover:bg-[#e5ddd8] rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NOTIFICATION PREFERENCES VIEW */}
+          {activeTab === 'notifications' && profileView === 'notifications' && (
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-2xl mx-auto">
+              <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-4 mb-4">
+                <h2 className="text-lg font-bold text-[#2d231e]">Notification Preferences</h2>
+                <button 
+                  onClick={() => setActiveTab('dashboard')}
+                  className="text-xs text-[#b5a69c] hover:text-[#b35c44] transition"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
+                  <div>
+                    <p className="font-semibold text-sm text-[#2d231e]">Email Notifications</p>
+                    <p className="text-xs text-[#b5a69c]">Receive email updates about your tasks</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                    <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
+                  <div>
+                    <p className="font-semibold text-sm text-[#2d231e]">Push Notifications</p>
+                    <p className="text-xs text-[#b5a69c]">Receive real-time notifications in-app</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                    <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
+                  <div>
+                    <p className="font-semibold text-sm text-[#2d231e]">Task Reminders</p>
+                    <p className="text-xs text-[#b5a69c]">Get reminded about upcoming deadlines</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                    <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
+                  <div>
+                    <p className="font-semibold text-sm text-[#2d231e]">Weekly Reports</p>
+                    <p className="text-xs text-[#b5a69c]">Receive weekly summary of your tasks</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" />
+                    <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
+                  </label>
+                </div>
+                <div className="pt-2 flex gap-3">
+                  <button 
+                    onClick={() => setActiveTab('dashboard')}
+                    className="px-4 py-2 bg-[#b35c44] text-white font-semibold rounded-xl hover:bg-[#a04f3a] transition shadow-sm"
+                  >
+                    Save Preferences
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('dashboard')}
+                    className="px-4 py-2 font-semibold text-[#2d231e] bg-[#f5f0ec] hover:bg-[#e5ddd8] rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* TEAM - Updated with roles, emails and colorful design */}
           {activeTab === 'team' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
