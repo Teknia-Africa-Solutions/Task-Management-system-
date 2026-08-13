@@ -367,6 +367,18 @@ export default function Home() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Close mobile sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (isMobileSidebarOpen && !target.closest('aside') && !target.closest('button')) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobileSidebarOpen]);
+
   // Fetch tasks from MySQL API
   useEffect(() => {
     const fetchTasks = async () => {
@@ -710,7 +722,7 @@ export default function Home() {
     );
   }
 
-  // Dashboard App - Fully Responsive
+  // Dashboard App - Fully Responsive with Working Profile on Mobile
   return (
     <div className="flex h-screen w-screen bg-[#f7f2ee] text-[#2d231e] font-sans overflow-hidden">
       {/* Mobile Sidebar Overlay */}
@@ -798,17 +810,18 @@ export default function Home() {
 
       {/* MAIN LAYOUT */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* HEADER - Responsive */}
-        <header className="px-4 sm:px-6 lg:px-8 py-3 border-b border-[#e5ddd8]/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-2 sm:gap-4 shrink-0 z-20">
-          <div className="flex items-center gap-3 min-w-0">
+        {/* HEADER - Responsive with Working Profile */}
+        <header className="px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 border-b border-[#e5ddd8]/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-2 shrink-0 z-20">
+          {/* Left side - Hamburger + Title */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-[#2d231e] hover:bg-[#f5f0ec] rounded-lg transition"
+              className="lg:hidden p-1.5 sm:p-2 -ml-1.5 sm:-ml-2 text-[#2d231e] hover:bg-[#f5f0ec] rounded-lg transition"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5 sm:w-5 sm:h-5" />
             </button>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-bold text-[#2d231e] tracking-tight capitalize truncate">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-sm sm:text-base md:text-xl font-bold text-[#2d231e] tracking-tight capitalize truncate">
                 {activeTab === 'dashboard' && 'Dashboard'}
                 {activeTab === 'tasks' && 'My Tasks'}
                 {activeTab === 'projects' && 'Projects'}
@@ -822,14 +835,15 @@ export default function Home() {
                 {activeTab === 'settings' && 'Settings'}
               </h1>
               {activeTab === 'dashboard' && (
-                <p className="text-[10px] sm:text-xs text-[#b5a69c] truncate hidden sm:block">Here&apos;s what your tasks look like:</p>
+                <p className="text-[9px] sm:text-[10px] md:text-xs text-[#b5a69c] truncate hidden sm:block">Here&apos;s what your tasks look like:</p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-            {/* Search - Hidden on very small screens */}
-            <div className="hidden sm:flex items-center gap-2 bg-[#f5f0ec]/80 px-2 sm:px-3 py-1.5 rounded-xl border border-[#e5ddd8]/80 w-32 md:w-48 lg:w-64 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition">
+          {/* Right side - Action Buttons + Profile (Works on Mobile) */}
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
+            {/* Search - Hidden on mobile */}
+            <div className="hidden md:flex items-center gap-2 bg-[#f5f0ec]/80 px-2 sm:px-3 py-1.5 rounded-xl border border-[#e5ddd8]/80 w-32 lg:w-48 xl:w-64 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition">
               <Search className="w-3.5 h-3.5 text-[#b5a69c] shrink-0" />
               <input
                 type="text"
@@ -839,32 +853,32 @@ export default function Home() {
             </div>
 
             {/* Filter - Hidden on mobile */}
-            <button className="hidden sm:flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
-              <Filter className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Filter</span>
+            <button className="hidden sm:flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
+              <Filter className="w-3.5 h-3.5" /> <span className="hidden md:inline">Filter</span>
             </button>
 
             {/* Bell */}
             <button className="relative p-1.5 sm:p-2 text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
-              <Bell className="w-4 h-4" />
+              <Bell className="w-4 h-4 sm:w-4 sm:h-4" />
               <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center animate-pulse">
                 3
               </span>
             </button>
 
-            {/* New Task */}
+            {/* New Task - Text hidden on mobile */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95"
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">New Task</span>
             </button>
 
-            {/* Profile Dropdown */}
-            <div className="relative border-l border-[#e5ddd8] pl-1 sm:pl-3">
+            {/* Profile Dropdown - Works on Mobile */}
+            <div className="relative border-l border-[#e5ddd8] pl-1 sm:pl-2 md:pl-3">
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-1 sm:gap-2.5 p-1 rounded-xl hover:bg-[#f5f0ec]/80 transition"
+                className="flex items-center gap-1 sm:gap-2 p-1 rounded-xl hover:bg-[#f5f0ec]/80 transition"
               >
                 <div className="relative">
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#f0e4dc] text-[#8f6b5c] font-extrabold flex items-center justify-center text-[10px] sm:text-xs border border-[#e5d5cb] shadow-sm">
@@ -872,13 +886,15 @@ export default function Home() {
                   </div>
                   <span className="absolute bottom-0 right-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                 </div>
-                <div className="text-left hidden lg:block">
+                {/* Name hidden on small screens, visible on tablet+ */}
+                <div className="text-left hidden md:block">
                   <h4 className="text-xs font-bold text-[#2d231e] leading-none">Nova</h4>
                   <p className="text-[10px] text-[#b5a69c] font-medium mt-0.5">Project Manager</p>
                 </div>
                 <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c] transition-transform duration-200 hidden sm:block ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
+              {/* Profile Dropdown Menu - Fully Responsive */}
               {isProfileMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-[#e5ddd8]/80 py-2 z-50 text-xs text-[#2d231e]">
                   <div className="px-3 sm:px-4 py-2 border-b border-[#f5f0ec]">
@@ -890,19 +906,19 @@ export default function Home() {
                       onClick={() => handleProfileAction('profile')}
                       className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
-                      <User className="w-3.5 h-3.5 text-[#b5a69c]" /> View Profile
+                      <User className="w-3.5 h-3.5 text-[#b5a69c]" /> <span>View Profile</span>
                     </button>
                     <button 
                       onClick={() => handleProfileAction('settings')}
                       className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
-                      <Settings className="w-3.5 h-3.5 text-[#b5a69c]" /> Account Settings
+                      <Settings className="w-3.5 h-3.5 text-[#b5a69c]" /> <span>Account Settings</span>
                     </button>
                     <button 
                       onClick={() => handleProfileAction('notifications')}
                       className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
-                      <Bell className="w-3.5 h-3.5 text-[#b5a69c]" /> Notifications
+                      <Bell className="w-3.5 h-3.5 text-[#b5a69c]" /> <span>Notifications</span>
                     </button>
                   </div>
                   <div className="border-t border-[#f5f0ec] pt-1 mt-1">
@@ -910,7 +926,7 @@ export default function Home() {
                       onClick={() => handleProfileAction('logout')}
                       className="w-full text-left px-3 sm:px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2.5 font-semibold transition"
                     >
-                      <LogOut className="w-3.5 h-3.5 text-rose-500" /> Log Out
+                      <LogOut className="w-3.5 h-3.5 text-rose-500" /> <span>Log Out</span>
                     </button>
                   </div>
                 </div>
@@ -924,14 +940,14 @@ export default function Home() {
           {/* DASHBOARD */}
           {activeTab === 'dashboard' && (
             <div className="space-y-4 sm:space-y-6">
-              {/* Stats Cards - Responsive Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+              {/* Stats Cards - 2 columns on mobile */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                 <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
-                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Total Tasks</p>
-                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">35</h3>
-                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                      <p className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Total Tasks</p>
+                      <h3 className="text-base sm:text-lg md:text-2xl font-black text-[#2d231e] mt-0.5">35</h3>
+                      <p className="text-[8px] sm:text-[9px] md:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 mt-0.5">
                         <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 12%
                       </p>
                     </div>
@@ -944,9 +960,9 @@ export default function Home() {
                 <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
-                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Pending</p>
-                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">14</h3>
-                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                      <p className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Pending</p>
+                      <h3 className="text-base sm:text-lg md:text-2xl font-black text-[#2d231e] mt-0.5">14</h3>
+                      <p className="text-[8px] sm:text-[9px] md:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 mt-0.5">
                         <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 5%
                       </p>
                     </div>
@@ -959,9 +975,9 @@ export default function Home() {
                 <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
-                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">In Progress</p>
-                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">11</h3>
-                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                      <p className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">In Progress</p>
+                      <h3 className="text-base sm:text-lg md:text-2xl font-black text-[#2d231e] mt-0.5">11</h3>
+                      <p className="text-[8px] sm:text-[9px] md:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 mt-0.5">
                         <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 8%
                       </p>
                     </div>
@@ -974,9 +990,9 @@ export default function Home() {
                 <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
-                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Completed</p>
-                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">10</h3>
-                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                      <p className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Completed</p>
+                      <h3 className="text-base sm:text-lg md:text-2xl font-black text-[#2d231e] mt-0.5">10</h3>
+                      <p className="text-[8px] sm:text-[9px] md:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 mt-0.5">
                         <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 20%
                       </p>
                     </div>
@@ -1017,7 +1033,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Upcoming Deadlines */}
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4 text-[#b35c44]" /> Deadlines
@@ -1040,7 +1055,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Tasks Due Today + Team Activity - Responsive */}
+              {/* Tasks Due Today + Team Activity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
@@ -1091,7 +1106,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Projects Overview - Responsive */}
+              {/* Projects Overview */}
               <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                 <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
                   <FolderKanban className="w-4 h-4 text-[#b35c44]" /> Projects
@@ -1334,16 +1349,16 @@ export default function Home() {
             </div>
           )}
 
-          {/* MY TASKS - Responsive */}
+          {/* MY TASKS - Responsive with Filters */}
           {activeTab === 'tasks' && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   {['ALL', 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'].map((status) => (
                     <button
                       key={status}
                       onClick={() => setTaskFilter(status as any)}
-                      className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold transition ${
+                      className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[9px] sm:text-[10px] md:text-xs font-semibold transition ${
                         taskFilter === status
                           ? 'bg-[#b35c44] text-white shadow-xs'
                           : 'bg-white text-[#2d231e] border border-[#e5ddd8] hover:bg-[#f5f0ec]'
@@ -1371,12 +1386,12 @@ export default function Home() {
                     filteredTasks.map((task) => (
                       <div key={task.id} className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-[#f5f0ec]/50 transition gap-3">
                         <div className="space-y-1 w-full sm:w-auto">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h4 className="font-bold text-sm text-[#2d231e]">{task.title}</h4>
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <h4 className="font-bold text-xs sm:text-sm text-[#2d231e]">{task.title}</h4>
                             {getPriorityBadge(task.priority)}
                             {getStatusBadge(task.status)}
                           </div>
-                          <p className="text-[11px] text-[#b5a69c] font-medium truncate">
+                          <p className="text-[10px] sm:text-[11px] text-[#b5a69c] font-medium truncate">
                             Category: {task.category} • Due {task.due} • Assignee: {task.assignee || 'Unassigned'}
                           </p>
                         </div>
@@ -1433,7 +1448,7 @@ export default function Home() {
           {/* CALENDAR - Responsive */}
           {activeTab === 'calendar' && (
             <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm overflow-hidden w-full max-w-5xl mx-auto">
-              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-[#f5f0ec] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-[#f5f0ec] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-base sm:text-lg font-bold text-[#2d231e]">May 2026</h2>
                   <div className="flex items-center bg-[#f5f0ec] rounded-lg p-0.5 border border-[#e5ddd8]/60">
