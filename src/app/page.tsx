@@ -822,7 +822,7 @@ export default function Home() {
                 {activeTab === 'settings' && 'Settings'}
               </h1>
               {activeTab === 'dashboard' && (
-                <p className="text-[10px] sm:text-xs text-[#b5a69c] truncate hidden sm:block">Welcome back, Nova! 🎉</p>
+                <p className="text-[10px] sm:text-xs text-[#b5a69c] truncate hidden sm:block">Here&apos;s what your tasks look like:</p>
               )}
             </div>
           </div>
@@ -843,7 +843,7 @@ export default function Home() {
               <Filter className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Filter</span>
             </button>
 
-            {/* Bell - Hidden on very small */}
+            {/* Bell */}
             <button className="relative p-1.5 sm:p-2 text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
               <Bell className="w-4 h-4" />
               <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center animate-pulse">
@@ -851,7 +851,7 @@ export default function Home() {
               </span>
             </button>
 
-            {/* New Task - Text hidden on mobile */}
+            {/* New Task */}
             <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95"
