@@ -1,4 +1,4 @@
-// app/page.tsx (updated Team section in sidebar and main content)
+// app/page.tsx
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -60,6 +60,7 @@ import {
   Users2,
   Mail,
   Phone,
+  X as XIcon,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -352,7 +353,19 @@ export default function Home() {
   const [profileView, setProfileView] = useState<'profile' | 'settings' | 'notifications' | null>(null);
   const [taskFilter, setTaskFilter] = useState<'ALL' | 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE'>('ALL');
   const [teamMembers] = useState<TeamMember[]>(TEAM_MEMBERS);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Close mobile sidebar on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch tasks from MySQL API
   useEffect(() => {
@@ -697,11 +710,24 @@ export default function Home() {
     );
   }
 
-  // Dashboard App
+  // Dashboard App - Fully Responsive
   return (
     <div className="flex h-screen w-screen bg-[#f7f2ee] text-[#2d231e] font-sans overflow-hidden">
-      {/* SIDEBAR */}
-      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-[#1f1814] text-[#b5a69c] border-r border-[#3a2d26] flex flex-col justify-between p-4 shrink-0 select-none h-full z-30 transition-all duration-300`}>
+      {/* Mobile Sidebar Overlay */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR - Responsive */}
+      <aside className={`
+        fixed lg:relative z-50 h-full bg-[#1f1814] text-[#b5a69c] border-r border-[#3a2d26] 
+        flex flex-col justify-between p-4 shrink-0 select-none transition-all duration-300
+        ${isMobileSidebarOpen ? 'left-0' : '-left-80 lg:left-0'}
+        ${sidebarCollapsed ? 'w-20' : 'w-64'}
+      `}>
         <div className="flex flex-col min-h-0">
           {/* BRAND */}
           <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-2 py-3 mb-4 shrink-0`}>
@@ -717,9 +743,17 @@ export default function Home() {
             )}
           </div>
 
+          {/* Mobile Close Button */}
+          <button 
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="lg:hidden absolute top-4 right-4 text-[#b5a69c] hover:text-white transition"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+
           <button 
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="mb-4 text-[#b5a69c] hover:text-white transition p-1 rounded-lg hover:bg-[#2d231e]/50"
+            className="hidden lg:flex mb-4 text-[#b5a69c] hover:text-white transition p-1 rounded-lg hover:bg-[#2d231e]/50"
           >
             <Menu className="w-4 h-4" />
           </button>
@@ -731,7 +765,10 @@ export default function Home() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setIsMobileSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                     isActive
                       ? 'bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] text-white shadow-md shadow-[#b35c44]/20'
@@ -760,34 +797,40 @@ export default function Home() {
       </aside>
 
       {/* MAIN LAYOUT */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-        {/* HEADER */}
-        <header className="px-8 py-3.5 border-b border-[#e5ddd8]/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-4 shrink-0 z-20">
-          <div>
-            <h1 className="text-xl font-bold text-[#2d231e] tracking-tight capitalize flex items-center gap-2">
-              {activeTab === 'dashboard' && 'Dashboard'}
-              {activeTab === 'tasks' && 'My Tasks'}
-              {activeTab === 'projects' && 'Projects'}
-              {activeTab === 'calendar' && 'Calendar'}
-              {activeTab === 'team' && 'Team'}
-              {activeTab === 'messages' && 'Messages'}
-              {activeTab === 'files' && 'Files'}
-              {activeTab === 'reports' && 'Reports'}
-              {activeTab === 'notifications' && 'Notifications'}
-              {activeTab === 'profile' && 'Profile'}
-              {activeTab === 'settings' && 'Settings'}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* HEADER - Responsive */}
+        <header className="px-4 sm:px-6 lg:px-8 py-3 border-b border-[#e5ddd8]/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-2 sm:gap-4 shrink-0 z-20">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="lg:hidden p-2 -ml-2 text-[#2d231e] hover:bg-[#f5f0ec] rounded-lg transition"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold text-[#2d231e] tracking-tight capitalize truncate">
+                {activeTab === 'dashboard' && 'Dashboard'}
+                {activeTab === 'tasks' && 'My Tasks'}
+                {activeTab === 'projects' && 'Projects'}
+                {activeTab === 'calendar' && 'Calendar'}
+                {activeTab === 'team' && 'Team'}
+                {activeTab === 'messages' && 'Messages'}
+                {activeTab === 'files' && 'Files'}
+                {activeTab === 'reports' && 'Reports'}
+                {activeTab === 'notifications' && 'Notifications'}
+                {activeTab === 'profile' && 'Profile'}
+                {activeTab === 'settings' && 'Settings'}
+              </h1>
               {activeTab === 'dashboard' && (
-                <span className="text-sm font-normal text-[#b5a69c] ml-2">Welcome back, Nova! 🎉</span>
+                <p className="text-[10px] sm:text-xs text-[#b5a69c] truncate hidden sm:block">Welcome back, Nova! 🎉</p>
               )}
-            </h1>
-            {activeTab === 'dashboard' && (
-              <p className="text-xs text-[#b5a69c]">Here&apos;s what&apos;s happening with your tasks today.</p>
-            )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-[#f5f0ec]/80 px-3 py-1.5 rounded-xl border border-[#e5ddd8]/80 w-64 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition">
-              <Search className="w-4 h-4 text-[#b5a69c] shrink-0" />
+          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+            {/* Search - Hidden on very small screens */}
+            <div className="hidden sm:flex items-center gap-2 bg-[#f5f0ec]/80 px-2 sm:px-3 py-1.5 rounded-xl border border-[#e5ddd8]/80 w-32 md:w-48 lg:w-64 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition">
+              <Search className="w-3.5 h-3.5 text-[#b5a69c] shrink-0" />
               <input
                 type="text"
                 placeholder="Search..."
@@ -795,73 +838,77 @@ export default function Home() {
               />
             </div>
 
-            <button className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
-              <Filter className="w-3.5 h-3.5" /> Filter
+            {/* Filter - Hidden on mobile */}
+            <button className="hidden sm:flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
+              <Filter className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Filter</span>
             </button>
 
-            <button className="relative p-2 text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
+            {/* Bell - Hidden on very small */}
+            <button className="relative p-1.5 sm:p-2 text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
               <Bell className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center animate-pulse">
                 3
               </span>
             </button>
 
+            {/* New Task - Text hidden on mobile */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95"
             >
-              <Plus className="w-4 h-4" /> New Task
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">New Task</span>
             </button>
 
             {/* Profile Dropdown */}
-            <div className="relative border-l border-[#e5ddd8] pl-3">
+            <div className="relative border-l border-[#e5ddd8] pl-1 sm:pl-3">
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-[#f5f0ec]/80 transition"
+                className="flex items-center gap-1 sm:gap-2.5 p-1 rounded-xl hover:bg-[#f5f0ec]/80 transition"
               >
                 <div className="relative">
-                  <div className="w-8 h-8 rounded-full bg-[#f0e4dc] text-[#8f6b5c] font-extrabold flex items-center justify-center text-xs border border-[#e5d5cb] shadow-sm">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#f0e4dc] text-[#8f6b5c] font-extrabold flex items-center justify-center text-[10px] sm:text-xs border border-[#e5d5cb] shadow-sm">
                     NV
                   </div>
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                  <span className="absolute bottom-0 right-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                 </div>
-                <div className="text-left hidden sm:block">
+                <div className="text-left hidden lg:block">
                   <h4 className="text-xs font-bold text-[#2d231e] leading-none">Nova</h4>
                   <p className="text-[10px] text-[#b5a69c] font-medium mt-0.5">Project Manager</p>
                 </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-[#b5a69c] transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c] transition-transform duration-200 hidden sm:block ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#e5ddd8]/80 py-2 z-50 text-xs text-[#2d231e]">
-                  <div className="px-4 py-2 border-b border-[#f5f0ec]">
+                <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-[#e5ddd8]/80 py-2 z-50 text-xs text-[#2d231e]">
+                  <div className="px-3 sm:px-4 py-2 border-b border-[#f5f0ec]">
                     <p className="font-bold text-[#2d231e]">Nova</p>
-                    <p className="text-[10px] text-[#b5a69c] font-mono">nova@gmail.com</p>
+                    <p className="text-[10px] text-[#b5a69c] font-mono truncate">nova@gmail.com</p>
                   </div>
                   <div className="py-1">
                     <button 
                       onClick={() => handleProfileAction('profile')}
-                      className="w-full text-left px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
+                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
                       <User className="w-3.5 h-3.5 text-[#b5a69c]" /> View Profile
                     </button>
                     <button 
                       onClick={() => handleProfileAction('settings')}
-                      className="w-full text-left px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
+                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
                       <Settings className="w-3.5 h-3.5 text-[#b5a69c]" /> Account Settings
                     </button>
                     <button 
                       onClick={() => handleProfileAction('notifications')}
-                      className="w-full text-left px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
+                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
                     >
-                      <Bell className="w-3.5 h-3.5 text-[#b5a69c]" /> Notification Preferences
+                      <Bell className="w-3.5 h-3.5 text-[#b5a69c]" /> Notifications
                     </button>
                   </div>
                   <div className="border-t border-[#f5f0ec] pt-1 mt-1">
                     <button 
                       onClick={() => handleProfileAction('logout')}
-                      className="w-full text-left px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2.5 font-semibold transition"
+                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2.5 font-semibold transition"
                     >
                       <LogOut className="w-3.5 h-3.5 text-rose-500" /> Log Out
                     </button>
@@ -872,82 +919,82 @@ export default function Home() {
           </div>
         </header>
 
-        {/* MAIN CONTENT */}
-        <main className="p-6 flex-1 overflow-y-auto min-h-0 space-y-6">
+        {/* MAIN CONTENT - Responsive */}
+        <main className="p-3 sm:p-4 md:p-6 flex-1 overflow-y-auto min-h-0 space-y-4 sm:space-y-6">
           {/* DASHBOARD */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-6">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+            <div className="space-y-4 sm:space-y-6">
+              {/* Stats Cards - Responsive Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+                <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Total Tasks</p>
-                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">35</h3>
-                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
-                        <ArrowUpRight className="w-3 h-3" /> 12% from last week
+                    <div className="min-w-0">
+                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Total Tasks</p>
+                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">35</h3>
+                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                        <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 12%
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] border border-[#e5d5cb]">
-                      <ListTodo className="w-5 h-5" />
+                    <div className="p-2 sm:p-3 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] border border-[#e5d5cb] shrink-0">
+                      <ListTodo className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Pending Tasks</p>
-                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">14</h3>
-                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
-                        <ArrowUpRight className="w-3 h-3" /> 5% from last week
+                    <div className="min-w-0">
+                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Pending</p>
+                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">14</h3>
+                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                        <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 5%
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-                      <Clock className="w-5 h-5" />
+                    <div className="p-2 sm:p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shrink-0">
+                      <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">In Progress</p>
-                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">11</h3>
-                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
-                        <ArrowUpRight className="w-3 h-3" /> 8% from last week
+                    <div className="min-w-0">
+                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">In Progress</p>
+                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">11</h3>
+                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                        <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 8%
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                      <Activity className="w-5 h-5" />
+                    <div className="p-2 sm:p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
+                      <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Completed</p>
-                      <h3 className="text-2xl font-black text-[#2d231e] mt-1">10</h3>
-                      <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
-                        <ArrowUpRight className="w-3 h-3" /> 20% from last week
+                    <div className="min-w-0">
+                      <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Completed</p>
+                      <h3 className="text-lg sm:text-2xl font-black text-[#2d231e] mt-0.5 sm:mt-1">10</h3>
+                      <p className="text-[8px] sm:text-xs text-emerald-600 font-semibold flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                        <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 20%
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      <CheckCircle2 className="w-5 h-5" />
+                    <div className="p-2 sm:p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+                      <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Chart + Deadlines */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm lg:col-span-2">
-                  <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-3 mb-4">
+              {/* Chart + Deadlines - Responsive */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm lg:col-span-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#f5f0ec] pb-3 mb-4 gap-2">
                     <h3 className="font-bold text-[#2d231e] text-sm flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-[#b35c44]" /> Task Overview
                     </h3>
-                    <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-3 text-xs flex-wrap">
                       <span className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#b35c44]" /> Completed
                       </span>
@@ -956,12 +1003,12 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <div className="h-64 w-full">
+                  <div className="h-48 sm:h-56 md:h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={CHART_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0ece8" />
-                        <XAxis dataKey="name" stroke="#b5a69c" fontSize={11} tickLine={false} />
-                        <YAxis stroke="#b5a69c" fontSize={11} tickLine={false} />
+                        <XAxis dataKey="name" stroke="#b5a69c" fontSize={10} tickLine={false} />
+                        <YAxis stroke="#b5a69c" fontSize={10} tickLine={false} />
                         <Tooltip content={<CustomChartTooltip />} />
                         <Bar dataKey="completed" fill="#b35c44" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="created" fill="#d4846a" radius={[4, 4, 0, 0]} />
@@ -971,45 +1018,45 @@ export default function Home() {
                 </div>
 
                 {/* Upcoming Deadlines */}
-                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-[#b35c44]" /> Upcoming Deadlines
+                    <CalendarIcon className="w-4 h-4 text-[#b35c44]" /> Deadlines
                   </h3>
                   <div className="space-y-3">
                     {UPCOMING_DEADLINES.map((deadline) => (
                       <div key={deadline.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#f5f0ec]/50 transition">
-                        <div className="w-12 h-12 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] flex flex-col items-center justify-center shrink-0">
-                          <span className="text-[9px] font-bold">{deadline.month}</span>
-                          <span className="text-base font-black">{deadline.day}</span>
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] flex flex-col items-center justify-center shrink-0">
+                          <span className="text-[8px] sm:text-[9px] font-bold">{deadline.month}</span>
+                          <span className="text-sm sm:text-base font-black">{deadline.day}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-[#2d231e] truncate">{deadline.title}</p>
                           <p className="text-[10px] text-[#b5a69c] font-medium">{deadline.daysUntil}</p>
                         </div>
-                        <Flag className="w-3.5 h-3.5 text-[#b5a69c]" />
+                        <Flag className="w-3.5 h-3.5 text-[#b5a69c] shrink-0" />
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Tasks Due Today + Team Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+              {/* Tasks Due Today + Team Activity - Responsive */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
-                    <Clock4 className="w-4 h-4 text-[#b35c44]" /> Tasks Due Today
+                    <Clock4 className="w-4 h-4 text-[#b35c44]" /> Due Today
                   </h3>
                   <div className="space-y-3">
                     {tasks.filter(t => t.due === '2026-05-21').map((task) => (
-                      <div key={task.id} className="flex items-center justify-between p-2 rounded-xl hover:bg-[#f5f0ec]/50 transition">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-1.5 h-8 rounded-full ${task.priority === 'HIGH' ? 'bg-amber-500' : task.priority === 'URGENT' ? 'bg-rose-500' : 'bg-blue-400'}`}></div>
-                          <div className="min-w-0">
+                      <div key={task.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 rounded-xl hover:bg-[#f5f0ec]/50 transition gap-2">
+                        <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+                          <div className={`w-1.5 h-8 rounded-full shrink-0 ${task.priority === 'HIGH' ? 'bg-amber-500' : task.priority === 'URGENT' ? 'bg-rose-500' : 'bg-blue-400'}`}></div>
+                          <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold text-[#2d231e] truncate">{task.title}</p>
                             <p className="text-[10px] text-[#b5a69c]">{task.category}</p>
                           </div>
                         </div>
-                        {getPriorityBadge(task.priority)}
+                        <div className="shrink-0">{getPriorityBadge(task.priority)}</div>
                       </div>
                     ))}
                     {tasks.filter(t => t.due === '2026-05-21').length === 0 && (
@@ -1018,7 +1065,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                   <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
                     <Users className="w-4 h-4 text-[#b35c44]" /> Team Activity
                   </h3>
@@ -1029,12 +1076,12 @@ export default function Home() {
                           {member.initials}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-[#2d231e]">
+                          <p className="text-xs text-[#2d231e] truncate">
                             <span className="font-bold">{member.name}</span>
                             <span className="text-[#b5a69c]"> • {member.role}</span>
                           </p>
-                          <p className="text-[10px] text-[#b5a69c]">{member.email}</p>
-                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${getStatusTextColor(member.status)}`}>
+                          <p className="text-[10px] text-[#b5a69c] truncate">{member.email}</p>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold inline-block ${getStatusTextColor(member.status)}`}>
                             {member.status}
                           </span>
                         </div>
@@ -1044,18 +1091,18 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Projects Overview */}
-              <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+              {/* Projects Overview - Responsive */}
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
                 <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 mb-4 flex items-center gap-2">
-                  <FolderKanban className="w-4 h-4 text-[#b35c44]" /> Projects Overview
+                  <FolderKanban className="w-4 h-4 text-[#b35c44]" /> Projects
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {PROJECTS_DATA.map((project) => {
                     const Icon = project.icon;
                     return (
                       <div key={project.id} className="p-3 rounded-xl border border-[#e5ddd8]/60 hover:shadow-md transition">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className={`p-2 rounded-lg text-white`} style={{ backgroundColor: project.color }}>
+                          <div className={`p-2 rounded-lg text-white shrink-0`} style={{ backgroundColor: project.color }}>
                             <Icon className="w-4 h-4" />
                           </div>
                           <span className="text-xs font-bold text-[#2d231e] truncate flex-1">{project.name}</span>
@@ -1075,15 +1122,15 @@ export default function Home() {
 
           {/* PROFILE VIEW */}
           {activeTab === 'profile' && (
-            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-2xl mx-auto">
-              <div className="flex items-center gap-4 border-b border-[#f5f0ec] pb-5">
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-4 sm:p-6 max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 border-b border-[#f5f0ec] pb-5">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#b35c44] to-[#d4846a] text-white font-black text-3xl flex items-center justify-center shadow-lg shadow-[#b35c44]/20 shrink-0">
                   NV
                 </div>
-                <div>
+                <div className="text-center sm:text-left">
                   <h2 className="text-xl font-bold text-[#2d231e]">Nova</h2>
                   <p className="text-sm text-[#b5a69c] font-medium">Project Manager • TaskFlow Team</p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-3 mt-1">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-semibold">Active</span>
                     <span className="text-xs text-[#b5a69c]">Joined Jan 2026</span>
                   </div>
@@ -1093,7 +1140,7 @@ export default function Home() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5a69c]">Email</p>
-                    <p className="text-sm font-medium text-[#2d231e]">nova@gmail.com</p>
+                    <p className="text-sm font-medium text-[#2d231e] truncate">nova@gmail.com</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5a69c]">Role</p>
@@ -1108,7 +1155,7 @@ export default function Home() {
                     <p className="text-sm font-medium text-[#2d231e]">24</p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <button 
                     onClick={() => setActiveTab('dashboard')}
                     className="px-4 py-2 bg-[#b35c44] text-white font-semibold rounded-xl hover:bg-[#a04f3a] transition shadow-sm"
@@ -1128,7 +1175,7 @@ export default function Home() {
 
           {/* SETTINGS VIEW */}
           {activeTab === 'settings' && (
-            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-4 sm:p-6 max-w-2xl mx-auto">
               <h2 className="text-lg font-bold text-[#2d231e] border-b border-[#f5f0ec] pb-4 mb-4">Account Settings</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1159,7 +1206,7 @@ export default function Home() {
                     <option>German</option>
                   </select>
                 </div>
-                <div className="pt-2 flex gap-3">
+                <div className="pt-2 flex flex-wrap gap-3">
                   <button className="px-4 py-2 bg-[#b35c44] text-white font-semibold rounded-xl hover:bg-[#a04f3a] transition shadow-sm">
                     Save Changes
                   </button>
@@ -1176,8 +1223,8 @@ export default function Home() {
 
           {/* NOTIFICATION PREFERENCES VIEW */}
           {activeTab === 'notifications' && profileView === 'notifications' && (
-            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-2xl mx-auto">
-              <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-4 mb-4">
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-4 sm:p-6 max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#f5f0ec] pb-4 mb-4 gap-2">
                 <h2 className="text-lg font-bold text-[#2d231e]">Notification Preferences</h2>
                 <button 
                   onClick={() => setActiveTab('dashboard')}
@@ -1187,47 +1234,37 @@ export default function Home() {
                 </button>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl gap-2">
                   <div>
                     <p className="font-semibold text-sm text-[#2d231e]">Email Notifications</p>
-                    <p className="text-xs text-[#b5a69c]">Receive email updates about your tasks</p>
+                    <p className="text-xs text-[#b5a69c]">Receive email updates</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" defaultChecked className="sr-only peer" />
                     <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
                   </label>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl gap-2">
                   <div>
                     <p className="font-semibold text-sm text-[#2d231e]">Push Notifications</p>
-                    <p className="text-xs text-[#b5a69c]">Receive real-time notifications in-app</p>
+                    <p className="text-xs text-[#b5a69c]">Real-time alerts</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" defaultChecked className="sr-only peer" />
                     <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
                   </label>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl gap-2">
                   <div>
                     <p className="font-semibold text-sm text-[#2d231e]">Task Reminders</p>
-                    <p className="text-xs text-[#b5a69c]">Get reminded about upcoming deadlines</p>
+                    <p className="text-xs text-[#b5a69c]">Upcoming deadlines</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" defaultChecked className="sr-only peer" />
                     <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
                   </label>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-[#f5f0ec]/50 rounded-xl">
-                  <div>
-                    <p className="font-semibold text-sm text-[#2d231e]">Weekly Reports</p>
-                    <p className="text-xs text-[#b5a69c]">Receive weekly summary of your tasks</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-[#e5ddd8] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#b35c44]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#b35c44]"></div>
-                  </label>
-                </div>
-                <div className="pt-2 flex gap-3">
+                <div className="pt-2 flex flex-wrap gap-3">
                   <button 
                     onClick={() => setActiveTab('dashboard')}
                     className="px-4 py-2 bg-[#b35c44] text-white font-semibold rounded-xl hover:bg-[#a04f3a] transition shadow-sm"
@@ -1244,31 +1281,32 @@ export default function Home() {
               </div>
             </div>
           )}
-          {/* TEAM - Updated with roles, emails and colorful design */}
+
+          {/* TEAM - Responsive */}
           {activeTab === 'team' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {teamMembers.map((member) => (
-                <div key={member.id} className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-start gap-4">
-                    <div className={`w-16 h-16 rounded-2xl ${member.gradient} flex items-center justify-center font-extrabold text-xl text-white shadow-md shrink-0`}>
+                <div key={member.id} className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm hover:shadow-lg transition-all duration-200">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${member.gradient} flex items-center justify-center font-extrabold text-lg sm:text-xl text-white shadow-md shrink-0 mx-auto sm:mx-0`}>
                       {member.initials}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0 w-full">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <h3 className="font-bold text-[#2d231e] text-base">{member.name}</h3>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusTextColor(member.status)} border ${member.status === 'Active' ? 'border-emerald-200' : member.status === 'In Meeting' ? 'border-amber-200' : member.status === 'Busy' ? 'border-rose-200' : 'border-slate-200'}`}>
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusTextColor(member.status)} border ${member.status === 'Active' ? 'border-emerald-200' : member.status === 'In Meeting' ? 'border-amber-200' : member.status === 'Busy' ? 'border-rose-200' : 'border-slate-200'} shrink-0`}>
                           <span className={`inline-block w-1.5 h-1.5 rounded-full ${getStatusColor(member.status)} mr-1 animate-pulse`}></span>
                           {member.status}
                         </span>
                       </div>
                       <p className="text-sm font-semibold text-[#b35c44]">{member.role}</p>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-[#6b5a4e]">
-                        <Mail className="w-3.5 h-3.5 text-[#b5a69c]" />
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#6b5a4e] truncate">
+                        <Mail className="w-3.5 h-3.5 text-[#b5a69c] shrink-0" />
                         <span className="truncate">{member.email}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 text-xs text-[#6b5a4e]">
-                        <Phone className="w-3.5 h-3.5 text-[#b5a69c]" />
-                        <span>{member.phone}</span>
+                        <Phone className="w-3.5 h-3.5 text-[#b5a69c] shrink-0" />
+                        <span className="text-xs sm:text-sm">{member.phone}</span>
                       </div>
                       <div className="mt-3 space-y-1">
                         <div className="flex justify-between text-xs">
@@ -1296,16 +1334,16 @@ export default function Home() {
             </div>
           )}
 
-          {/* MY TASKS */}
+          {/* MY TASKS - Responsive */}
           {activeTab === 'tasks' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   {['ALL', 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'].map((status) => (
                     <button
                       key={status}
                       onClick={() => setTaskFilter(status as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+                      className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold transition ${
                         taskFilter === status
                           ? 'bg-[#b35c44] text-white shadow-xs'
                           : 'bg-white text-[#2d231e] border border-[#e5ddd8] hover:bg-[#f5f0ec]'
@@ -1317,7 +1355,7 @@ export default function Home() {
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl transition"
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl transition w-full sm:w-auto justify-center"
                 >
                   <Plus className="w-3.5 h-3.5" /> New Task
                 </button>
@@ -1331,18 +1369,18 @@ export default function Home() {
                     </div>
                   ) : (
                     filteredTasks.map((task) => (
-                      <div key={task.id} className="p-4 flex items-center justify-between hover:bg-[#f5f0ec]/50 transition">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                      <div key={task.id} className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-[#f5f0ec]/50 transition gap-3">
+                        <div className="space-y-1 w-full sm:w-auto">
+                          <div className="flex flex-wrap items-center gap-2">
                             <h4 className="font-bold text-sm text-[#2d231e]">{task.title}</h4>
                             {getPriorityBadge(task.priority)}
                             {getStatusBadge(task.status)}
                           </div>
-                          <p className="text-[11px] text-[#b5a69c] font-medium">
+                          <p className="text-[11px] text-[#b5a69c] font-medium truncate">
                             Category: {task.category} • Due {task.due} • Assignee: {task.assignee || 'Unassigned'}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <button className="p-1.5 text-[#b5a69c] hover:text-[#b35c44] rounded-lg hover:bg-[#f5f0ec] transition">
                             <Eye className="w-3.5 h-3.5" />
                           </button>
@@ -1358,19 +1396,19 @@ export default function Home() {
             </div>
           )}
 
-          {/* PROJECTS */}
+          {/* PROJECTS - Responsive */}
           {activeTab === 'projects' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {PROJECTS_DATA.map((project) => {
                 const Icon = project.icon;
                 return (
-                  <div key={project.id} className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm space-y-4 hover:shadow-md transition">
+                  <div key={project.id} className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm space-y-4 hover:shadow-md transition">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-xl text-white`} style={{ backgroundColor: project.color }}>
+                      <div className={`p-2.5 rounded-xl text-white shrink-0`} style={{ backgroundColor: project.color }}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <div>
-                        <h3 className="font-bold text-sm text-[#2d231e]">{project.name}</h3>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-sm text-[#2d231e] truncate">{project.name}</h3>
                         <p className="text-xs text-[#b5a69c]">{project.completedTasks} / {project.totalTasks} tasks</p>
                       </div>
                     </div>
@@ -1392,17 +1430,17 @@ export default function Home() {
             </div>
           )}
 
-          {/* CALENDAR */}
+          {/* CALENDAR - Responsive */}
           {activeTab === 'calendar' && (
             <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm overflow-hidden w-full max-w-5xl mx-auto">
-              <div className="px-6 py-4 border-b border-[#f5f0ec] flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-bold text-[#2d231e]">May 2026</h2>
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-[#f5f0ec] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-base sm:text-lg font-bold text-[#2d231e]">May 2026</h2>
                   <div className="flex items-center bg-[#f5f0ec] rounded-lg p-0.5 border border-[#e5ddd8]/60">
                     <button className="p-1 text-[#2d231e] hover:bg-white rounded transition">
                       <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <button className="px-2.5 py-1 text-xs font-bold text-white bg-[#b35c44] rounded transition">
+                    <button className="px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-white bg-[#b35c44] rounded transition">
                       Today
                     </button>
                     <button className="p-1 text-[#2d231e] hover:bg-white rounded transition">
@@ -1411,90 +1449,92 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-semibold px-3 py-1 bg-[#f0e4dc] text-[#8f6b5c] rounded-lg border border-[#e5d5cb]">Month</span>
-                  <span className="text-xs font-semibold px-3 py-1 text-[#b5a69c] hover:bg-[#f5f0ec] rounded-lg transition cursor-pointer">Week</span>
-                  <span className="text-xs font-semibold px-3 py-1 text-[#b5a69c] hover:bg-[#f5f0ec] rounded-lg transition cursor-pointer">Day</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 bg-[#f0e4dc] text-[#8f6b5c] rounded-lg border border-[#e5d5cb]">Month</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 text-[#b5a69c] hover:bg-[#f5f0ec] rounded-lg transition cursor-pointer">Week</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 text-[#b5a69c] hover:bg-[#f5f0ec] rounded-lg transition cursor-pointer">Day</span>
                 </div>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-7 mb-2 text-center text-[10px] font-bold text-[#b5a69c] uppercase tracking-wider">
-                  <div>Sun</div>
-                  <div>Mon</div>
-                  <div>Tue</div>
-                  <div>Wed</div>
-                  <div>Thu</div>
-                  <div>Fri</div>
-                  <div>Sat</div>
-                </div>
-                <div className="grid grid-cols-7 rounded-xl overflow-hidden border border-[#e5ddd8]/80">
-                  {renderCalendarDays()}
+              <div className="p-2 sm:p-4 overflow-x-auto">
+                <div className="min-w-[600px]">
+                  <div className="grid grid-cols-7 mb-2 text-center text-[10px] font-bold text-[#b5a69c] uppercase tracking-wider">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                  </div>
+                  <div className="grid grid-cols-7 rounded-xl overflow-hidden border border-[#e5ddd8]/80">
+                    {renderCalendarDays()}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* MESSAGES */}
+          {/* MESSAGES - Responsive */}
           {activeTab === 'messages' && (
-            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-6 max-w-3xl mx-auto">
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-4 sm:p-6 max-w-3xl mx-auto">
               <div className="flex items-center gap-3 border-b border-[#f5f0ec] pb-4 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#b35c44] to-[#d4846a] text-white flex items-center justify-center font-bold shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#b35c44] to-[#d4846a] text-white flex items-center justify-center font-bold shadow-sm shrink-0">
                   JD
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-bold text-[#2d231e] text-sm">Jane Doe</h3>
                   <p className="text-[10px] text-emerald-600">Online</p>
                 </div>
               </div>
               <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
                 <div className="flex justify-start">
-                  <div className="bg-[#f5f0ec] rounded-2xl rounded-tl-none px-4 py-2 max-w-[70%]">
-                    <p className="text-xs text-[#2d231e]">Hey! How&apos;s the UI design coming along?</p>
+                  <div className="bg-[#f5f0ec] rounded-2xl rounded-tl-none px-3 sm:px-4 py-2 max-w-[85%] sm:max-w-[70%]">
+                    <p className="text-xs text-[#2d231e]">Hey! How's the UI design coming along?</p>
                     <p className="text-[9px] text-[#b5a69c] mt-0.5">10:30 AM</p>
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <div className="bg-[#b35c44] text-white rounded-2xl rounded-tr-none px-4 py-2 max-w-[70%]">
+                  <div className="bg-[#b35c44] text-white rounded-2xl rounded-tr-none px-3 sm:px-4 py-2 max-w-[85%] sm:max-w-[70%]">
                     <p className="text-xs">Almost done! Just finishing the dashboard layout.</p>
                     <p className="text-[9px] text-[#d4846a] mt-0.5">10:32 AM</p>
                   </div>
                 </div>
                 <div className="flex justify-start">
-                  <div className="bg-[#f5f0ec] rounded-2xl rounded-tl-none px-4 py-2 max-w-[70%]">
+                  <div className="bg-[#f5f0ec] rounded-2xl rounded-tl-none px-3 sm:px-4 py-2 max-w-[85%] sm:max-w-[70%]">
                     <p className="text-xs text-[#2d231e]">Great! Can you share the prototype by EOD?</p>
                     <p className="text-[9px] text-[#b5a69c] mt-0.5">10:35 AM</p>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 border-t border-[#f5f0ec] pt-4">
-                <button className="p-2 text-[#b5a69c] hover:text-[#b35c44] transition">
+                <button className="p-2 text-[#b5a69c] hover:text-[#b35c44] transition shrink-0">
                   <Paperclip className="w-4 h-4" />
                 </button>
                 <input
                   type="text"
                   placeholder="Type a message..."
-                  className="flex-1 bg-[#f5f0ec] rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20"
+                  className="flex-1 bg-[#f5f0ec] rounded-xl px-3 sm:px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#b35c44]/20 min-w-0"
                 />
-                <button className="p-2 bg-[#b35c44] text-white rounded-xl hover:bg-[#a04f3a] transition">
+                <button className="p-2 bg-[#b35c44] text-white rounded-xl hover:bg-[#a04f3a] transition shrink-0">
                   <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* FILES */}
+          {/* FILES - Responsive */}
           {activeTab === 'files' && (
             <div className="space-y-4">
-              <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm flex items-center justify-between">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Total Files</p>
                     <h3 className="text-xl font-black text-[#2d231e]">{files.length}</h3>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] border border-[#e5d5cb]">
+                  <div className="p-3 rounded-xl bg-[#f0e4dc] text-[#8f6b5c] border border-[#e5d5cb] shrink-0">
                     <FileText className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -1503,7 +1543,7 @@ export default function Home() {
                   />
                   <button 
                     onClick={handleFileUpload}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl transition shadow-sm"
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl transition shadow-sm w-full sm:w-auto"
                   >
                     <Upload className="w-4 h-4" /> Upload File
                   </button>
@@ -1511,18 +1551,18 @@ export default function Home() {
               </div>
 
               <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-[#f5f0ec] flex items-center justify-between">
+                <div className="p-3 sm:p-4 border-b border-[#f5f0ec] flex items-center justify-between">
                   <h3 className="font-bold text-[#2d231e] text-sm">Workspace Files</h3>
                   <span className="text-xs text-[#b5a69c] font-medium">{files.length} items</span>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[500px]">
+                  <table className="w-full text-left border-collapse min-w-[400px] sm:min-w-[500px]">
                     <thead>
                       <tr className="bg-[#f5f0ec]/50 border-b border-[#e5ddd8] text-[10px] uppercase font-bold text-[#b5a69c] tracking-wider">
-                        <th className="p-3.5 pl-5">Name</th>
-                        <th className="p-3.5">Size</th>
-                        <th className="p-3.5">Uploaded By</th>
-                        <th className="p-3.5 text-right pr-5">Actions</th>
+                        <th className="p-2 sm:p-3.5 pl-3 sm:pl-5">Name</th>
+                        <th className="p-2 sm:p-3.5 hidden sm:table-cell">Size</th>
+                        <th className="p-2 sm:p-3.5 hidden md:table-cell">Uploaded By</th>
+                        <th className="p-2 sm:p-3.5 pr-3 sm:pr-5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f5f0ec] text-xs text-[#2d231e]">
@@ -1530,23 +1570,23 @@ export default function Home() {
                         const Icon = file.icon;
                         return (
                           <tr key={file.id} className="hover:bg-[#f5f0ec]/50 transition group">
-                            <td className="p-3.5 pl-5 font-semibold flex items-center gap-3">
-                              <div className={`p-2 rounded-lg border border-[#e5ddd8]/60 ${file.color} shrink-0`}>
-                                <Icon className="w-4 h-4" />
+                            <td className="p-2 sm:p-3.5 pl-3 sm:pl-5 font-semibold flex items-center gap-2 sm:gap-3 min-w-[120px]">
+                              <div className={`p-1.5 sm:p-2 rounded-lg border border-[#e5ddd8]/60 ${file.color} shrink-0`}>
+                                <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
                               </div>
-                              <span className="truncate max-w-xs">{file.name}</span>
+                              <span className="truncate max-w-[80px] sm:max-w-xs">{file.name}</span>
                             </td>
-                            <td className="p-3.5 font-mono text-[#b5a69c]">{file.size}</td>
-                            <td className="p-3.5 font-medium">{file.uploader}</td>
-                            <td className="p-3.5 pr-5 text-right space-x-2">
-                              <button className="p-1.5 text-[#b5a69c] hover:text-[#b35c44] rounded-lg hover:bg-[#f5f0ec] transition">
-                                <Download className="w-3.5 h-3.5" />
+                            <td className="p-2 sm:p-3.5 font-mono text-[#b5a69c] hidden sm:table-cell">{file.size}</td>
+                            <td className="p-2 sm:p-3.5 font-medium hidden md:table-cell">{file.uploader}</td>
+                            <td className="p-2 sm:p-3.5 pr-3 sm:pr-5 text-right space-x-1 sm:space-x-2 whitespace-nowrap">
+                              <button className="p-1 sm:p-1.5 text-[#b5a69c] hover:text-[#b35c44] rounded-lg hover:bg-[#f5f0ec] transition">
+                                <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                               </button>
                               <button 
                                 onClick={() => handleDeleteFile(file.id)}
-                                className="p-1.5 text-[#b5a69c] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                                className="p-1 sm:p-1.5 text-[#b5a69c] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                               </button>
                             </td>
                           </tr>
@@ -1559,31 +1599,31 @@ export default function Home() {
             </div>
           )}
 
-          {/* REPORTS */}
+          {/* REPORTS - Responsive */}
           {activeTab === 'reports' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Task Completion Rate</p>
-                  <h3 className="text-3xl font-black text-[#2d231e] mt-1">87%</h3>
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
+                  <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Completion Rate</p>
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#2d231e] mt-1">87%</h3>
                   <p className="text-xs text-emerald-600">↑ 12% from last month</p>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Avg. Task Duration</p>
-                  <h3 className="text-3xl font-black text-[#2d231e] mt-1">2.4d</h3>
+                <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
+                  <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Avg. Task Duration</p>
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#2d231e] mt-1">2.4d</h3>
                   <p className="text-xs text-emerald-600">↓ 8% from last month</p>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Team Productivity</p>
-                  <h3 className="text-3xl font-black text-[#2d231e] mt-1">92%</h3>
+                <div className="bg-white p-3 sm:p-4 rounded-2xl border border-[#e5ddd8]/80 shadow-sm text-center">
+                  <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#b5a69c]">Productivity</p>
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#2d231e] mt-1">92%</h3>
                   <p className="text-xs text-emerald-600">↑ 5% from last month</p>
                 </div>
               </div>
 
-              <div className="bg-white p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
-                <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-3 mb-4">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5ddd8]/80 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#f5f0ec] pb-3 mb-4 gap-2">
                   <h3 className="font-bold text-[#2d231e] text-sm">Task Completion & Pending Trend</h3>
-                  <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-4 text-xs flex-wrap">
                     <span className="flex items-center gap-1.5">
                       <span className="w-3 h-0.5 rounded-full bg-[#b35c44]"></span>
                       <span className="text-[#b5a69c]">Completed</span>
@@ -1594,15 +1634,15 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-                <div className="h-72 w-full">
+                <div className="h-56 sm:h-64 md:h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={WEEKLY_TREND_DATA} margin={{ top: 10, right: 30, left: -10, bottom: 0 }}>
+                    <LineChart data={WEEKLY_TREND_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0ece8" />
-                      <XAxis dataKey="week" stroke="#b5a69c" fontSize={11} tickLine={false} />
-                      <YAxis stroke="#b5a69c" fontSize={11} tickLine={false} />
+                      <XAxis dataKey="week" stroke="#b5a69c" fontSize={10} tickLine={false} />
+                      <YAxis stroke="#b5a69c" fontSize={10} tickLine={false} />
                       <Tooltip content={<CustomChartTooltip />} />
                       <Legend 
-                        wrapperStyle={{ fontSize: '11px', color: '#b5a69c' }}
+                        wrapperStyle={{ fontSize: '10px', color: '#b5a69c' }}
                         iconType="circle"
                         iconSize={8}
                       />
@@ -1610,18 +1650,18 @@ export default function Home() {
                         type="monotone" 
                         dataKey="completed" 
                         stroke="#b35c44" 
-                        strokeWidth={3}
-                        dot={{ fill: '#b35c44', r: 4 }}
-                        activeDot={{ r: 6 }}
+                        strokeWidth={2.5}
+                        dot={{ fill: '#b35c44', r: 3 }}
+                        activeDot={{ r: 5 }}
                       />
                       <Line 
                         type="monotone" 
                         dataKey="pending" 
                         stroke="#d4846a" 
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                         strokeDasharray="5 5"
-                        dot={{ fill: '#d4846a', r: 4 }}
-                        activeDot={{ r: 6 }}
+                        dot={{ fill: '#d4846a', r: 3 }}
+                        activeDot={{ r: 5 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -1632,28 +1672,28 @@ export default function Home() {
 
           {/* NOTIFICATIONS */}
           {activeTab === 'notifications' && !profileView && (
-            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-5 max-w-2xl mx-auto space-y-4">
+            <div className="bg-white rounded-2xl border border-[#e5ddd8]/80 shadow-sm p-4 sm:p-5 max-w-2xl mx-auto space-y-4">
               <h3 className="font-bold text-[#2d231e] text-sm border-b border-[#f5f0ec] pb-3 flex items-center gap-2">
                 <Bell className="w-4 h-4 text-[#b35c44]" /> Recent Notifications
               </h3>
               <div className="space-y-3">
                 <div className="flex gap-3 p-3 bg-[#f0e4dc]/30 rounded-xl border border-[#e5d5cb]/60">
                   <Sparkles className="w-4 h-4 text-[#b35c44] shrink-0 mt-0.5" />
-                  <div className="text-xs space-y-0.5">
+                  <div className="text-xs space-y-0.5 min-w-0">
                     <p className="font-bold text-[#2d231e]">Sprint Review Scheduled</p>
                     <p className="text-[#b5a69c]">Nova added a new calendar entry for May 21st.</p>
                   </div>
                 </div>
                 <div className="flex gap-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
                   <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <div className="text-xs space-y-0.5">
+                  <div className="text-xs space-y-0.5 min-w-0">
                     <p className="font-bold text-[#2d231e]">Task Completed</p>
-                    <p className="text-[#b5a69c]">Jane marked &apos;Landing Page Design&apos; as completed.</p>
+                    <p className="text-[#b5a69c]">Jane marked 'Landing Page Design' as completed.</p>
                   </div>
                 </div>
                 <div className="flex gap-3 p-3 bg-amber-50/50 rounded-xl border border-amber-100">
                   <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="text-xs space-y-0.5">
+                  <div className="text-xs space-y-0.5 min-w-0">
                     <p className="font-bold text-[#2d231e]">Upcoming Deadline</p>
                     <p className="text-[#b5a69c]">Project Proposal is due tomorrow!</p>
                   </div>
@@ -1664,10 +1704,10 @@ export default function Home() {
         </main>
       </div>
 
-      {/* CREATE TASK MODAL */}
+      {/* CREATE TASK MODAL - Responsive */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2d231e]/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#e5ddd8] w-full max-w-md p-6 space-y-4 animate-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#e5ddd8] w-full max-w-md p-4 sm:p-6 space-y-4 animate-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-[#f5f0ec] pb-3">
               <h3 className="font-bold text-[#2d231e] text-sm">Create New Task</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-[#b5a69c] hover:text-[#2d231e]">
@@ -1720,17 +1760,17 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2">
+              <div className="pt-3 flex flex-col sm:flex-row items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 font-semibold text-[#2d231e] bg-[#f5f0ec] hover:bg-[#e5ddd8] rounded-xl transition"
+                  className="w-full sm:w-auto px-4 py-2 font-semibold text-[#2d231e] bg-[#f5f0ec] hover:bg-[#e5ddd8] rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl shadow-md shadow-[#b35c44]/20 transition"
+                  className="w-full sm:w-auto px-4 py-2 font-semibold text-white bg-[#b35c44] hover:bg-[#a04f3a] rounded-xl shadow-md shadow-[#b35c44]/20 transition"
                 >
                   Create Task
                 </button>
