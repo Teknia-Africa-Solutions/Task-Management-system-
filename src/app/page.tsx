@@ -810,130 +810,130 @@ export default function Home() {
 
       {/* MAIN LAYOUT */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* HEADER - Responsive with Working Profile */}
-        <header className="px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 border-b border-[#e5ddd8]/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-2 shrink-0 z-20">
-          {/* Left side - Hamburger + Title */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <button
-              onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden p-1.5 sm:p-2 -ml-1.5 sm:-ml-2 text-[#2d231e] hover:bg-[#f5f0ec] rounded-lg transition"
-            >
-              <Menu className="w-5 h-5 sm:w-5 sm:h-5" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-sm sm:text-base md:text-xl font-bold text-[#2d231e] tracking-tight capitalize truncate">
-                {activeTab === 'dashboard' && 'Dashboard'}
-                {activeTab === 'tasks' && 'My Tasks'}
-                {activeTab === 'projects' && 'Projects'}
-                {activeTab === 'calendar' && 'Calendar'}
-                {activeTab === 'team' && 'Team'}
-                {activeTab === 'messages' && 'Messages'}
-                {activeTab === 'files' && 'Files'}
-                {activeTab === 'reports' && 'Reports'}
-                {activeTab === 'notifications' && 'Notifications'}
-                {activeTab === 'profile' && 'Profile'}
-                {activeTab === 'settings' && 'Settings'}
-              </h1>
-              {activeTab === 'dashboard' && (
-                <p className="text-[9px] sm:text-[10px] md:text-xs text-[#b5a69c] truncate hidden sm:block">Here&apos;s what your tasks look like:</p>
-              )}
-            </div>
+       {/* HEADER - Responsive with all buttons visible */}
+<header className="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 border-b border-[#e5ddd8]/80 bg-white/80 backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 shrink-0 z-20">
+  {/* Left side - Hamburger + Title */}
+  <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0 flex-1">
+    <button
+      onClick={() => setIsMobileSidebarOpen(true)}
+      className="lg:hidden p-1.5 sm:p-2 -ml-1 sm:-ml-2 text-[#2d231e] hover:bg-[#f5f0ec] rounded-lg transition"
+    >
+      <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+    </button>
+    <div className="min-w-0 flex-1">
+      <h1 className="text-xs sm:text-sm md:text-base lg:text-xl font-bold text-[#2d231e] tracking-tight capitalize truncate">
+        {activeTab === 'dashboard' && 'Dashboard'}
+        {activeTab === 'tasks' && 'My Tasks'}
+        {activeTab === 'projects' && 'Projects'}
+        {activeTab === 'calendar' && 'Calendar'}
+        {activeTab === 'team' && 'Team'}
+        {activeTab === 'messages' && 'Messages'}
+        {activeTab === 'files' && 'Files'}
+        {activeTab === 'reports' && 'Reports'}
+        {activeTab === 'notifications' && 'Notifications'}
+        {activeTab === 'profile' && 'Profile'}
+        {activeTab === 'settings' && 'Settings'}
+      </h1>
+      {activeTab === 'dashboard' && (
+        <p className="text-[8px] sm:text-[9px] md:text-[10px] text-[#b5a69c] truncate hidden xs:block">Here&apos;s what your tasks look like:</p>
+      )}
+    </div>
+  </div>
+
+  {/* Right side - All buttons visible on mobile */}
+  <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-shrink-0">
+    {/* Search - Visible on all screen sizes */}
+    <div className="flex items-center gap-1 sm:gap-2 bg-[#f5f0ec]/80 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded-xl border border-[#e5ddd8]/80 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition max-w-[80px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[180px] lg:max-w-[240px]">
+      <Search className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c] shrink-0" />
+      <input
+        type="text"
+        placeholder="Search..."
+        className="bg-transparent text-[10px] sm:text-xs text-[#2d231e] focus:outline-none w-full placeholder:text-[#b5a69c] font-medium min-w-[40px]"
+      />
+    </div>
+
+    {/* Filter - Visible on all screen sizes */}
+    <button className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm whitespace-nowrap">
+      <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+      <span className="hidden xs:inline text-[10px] sm:text-xs">Filter</span>
+    </button>
+
+    {/* Bell */}
+    <button className="relative p-1.5 sm:p-2 text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
+      <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[7px] sm:text-[8px] md:text-[9px] font-bold w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center animate-pulse">
+        3
+      </span>
+    </button>
+
+    {/* New Task - Visible on all screen sizes */}
+    <button
+      onClick={() => setIsModalOpen(true)}
+      className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95 whitespace-nowrap"
+    >
+      <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+      <span className="hidden xs:inline text-[10px] sm:text-xs">New</span>
+    </button>
+
+    {/* Profile Dropdown - Works on Mobile */}
+    <div className="relative border-l border-[#e5ddd8] pl-0.5 sm:pl-1 md:pl-2">
+      <button
+        onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+        className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-xl hover:bg-[#f5f0ec]/80 transition"
+      >
+        <div className="relative">
+          <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-[#f0e4dc] text-[#8f6b5c] font-extrabold flex items-center justify-center text-[8px] sm:text-[9px] md:text-xs border border-[#e5d5cb] shadow-sm">
+            NV
           </div>
+          <span className="absolute bottom-0 right-0 w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+        </div>
+        <div className="text-left hidden sm:block">
+          <h4 className="text-[10px] sm:text-xs font-bold text-[#2d231e] leading-none">Nova</h4>
+          <p className="text-[8px] sm:text-[10px] text-[#b5a69c] font-medium mt-0.5 hidden md:block">Project Manager</p>
+        </div>
+        <ChevronDown className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#b5a69c] transition-transform duration-200 hidden xs:block ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+      </button>
 
-          {/* Right side - Action Buttons + Profile (Works on Mobile) */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
-            {/* Search - Hidden on mobile */}
-            <div className="hidden md:flex items-center gap-2 bg-[#f5f0ec]/80 px-2 sm:px-3 py-1.5 rounded-xl border border-[#e5ddd8]/80 w-32 lg:w-48 xl:w-64 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition">
-              <Search className="w-3.5 h-3.5 text-[#b5a69c] shrink-0" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent text-xs text-[#2d231e] focus:outline-none w-full placeholder:text-[#b5a69c] font-medium"
-              />
-            </div>
-
-            {/* Filter - Hidden on mobile */}
-            <button className="hidden sm:flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
-              <Filter className="w-3.5 h-3.5" /> <span className="hidden md:inline">Filter</span>
-            </button>
-
-            {/* Bell */}
-            <button className="relative p-1.5 sm:p-2 text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm">
-              <Bell className="w-4 h-4 sm:w-4 sm:h-4" />
-              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center animate-pulse">
-                3
-              </span>
-            </button>
-
-            {/* New Task - Text hidden on mobile */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">New Task</span>
-            </button>
-
-            {/* Profile Dropdown - Works on Mobile */}
-            <div className="relative border-l border-[#e5ddd8] pl-1 sm:pl-2 md:pl-3">
-              <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-1 sm:gap-2 p-1 rounded-xl hover:bg-[#f5f0ec]/80 transition"
-              >
-                <div className="relative">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#f0e4dc] text-[#8f6b5c] font-extrabold flex items-center justify-center text-[10px] sm:text-xs border border-[#e5d5cb] shadow-sm">
-                    NV
-                  </div>
-                  <span className="absolute bottom-0 right-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
-                </div>
-                {/* Name hidden on small screens, visible on tablet+ */}
-                <div className="text-left hidden md:block">
-                  <h4 className="text-xs font-bold text-[#2d231e] leading-none">Nova</h4>
-                  <p className="text-[10px] text-[#b5a69c] font-medium mt-0.5">Project Manager</p>
-                </div>
-                <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c] transition-transform duration-200 hidden sm:block ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Profile Dropdown Menu - Fully Responsive */}
-              {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-[#e5ddd8]/80 py-2 z-50 text-xs text-[#2d231e]">
-                  <div className="px-3 sm:px-4 py-2 border-b border-[#f5f0ec]">
-                    <p className="font-bold text-[#2d231e]">Nova</p>
-                    <p className="text-[10px] text-[#b5a69c] font-mono truncate">nova@gmail.com</p>
-                  </div>
-                  <div className="py-1">
-                    <button 
-                      onClick={() => handleProfileAction('profile')}
-                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
-                    >
-                      <User className="w-3.5 h-3.5 text-[#b5a69c]" /> <span>View Profile</span>
-                    </button>
-                    <button 
-                      onClick={() => handleProfileAction('settings')}
-                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
-                    >
-                      <Settings className="w-3.5 h-3.5 text-[#b5a69c]" /> <span>Account Settings</span>
-                    </button>
-                    <button 
-                      onClick={() => handleProfileAction('notifications')}
-                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-[#f5f0ec] flex items-center gap-2.5 font-medium transition"
-                    >
-                      <Bell className="w-3.5 h-3.5 text-[#b5a69c]" /> <span>Notifications</span>
-                    </button>
-                  </div>
-                  <div className="border-t border-[#f5f0ec] pt-1 mt-1">
-                    <button 
-                      onClick={() => handleProfileAction('logout')}
-                      className="w-full text-left px-3 sm:px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2.5 font-semibold transition"
-                    >
-                      <LogOut className="w-3.5 h-3.5 text-rose-500" /> <span>Log Out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+      {/* Profile Dropdown Menu - Fully Responsive */}
+      {isProfileMenuOpen && (
+        <div className="absolute right-0 mt-1 sm:mt-2 w-44 sm:w-48 md:w-56 bg-white rounded-2xl shadow-xl border border-[#e5ddd8]/80 py-2 z-50 text-xs text-[#2d231e]">
+          <div className="px-3 sm:px-4 py-2 border-b border-[#f5f0ec]">
+            <p className="font-bold text-[#2d231e] text-xs sm:text-sm">Nova</p>
+            <p className="text-[9px] sm:text-[10px] text-[#b5a69c] font-mono truncate">nova@gmail.com</p>
           </div>
-        </header>
+          <div className="py-1">
+            <button 
+              onClick={() => handleProfileAction('profile')}
+              className="w-full text-left px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f5f0ec] flex items-center gap-2 sm:gap-2.5 font-medium transition text-[10px] sm:text-xs"
+            >
+              <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c]" /> <span>View Profile</span>
+            </button>
+            <button 
+              onClick={() => handleProfileAction('settings')}
+              className="w-full text-left px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f5f0ec] flex items-center gap-2 sm:gap-2.5 font-medium transition text-[10px] sm:text-xs"
+            >
+              <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c]" /> <span>Account Settings</span>
+            </button>
+            <button 
+              onClick={() => handleProfileAction('notifications')}
+              className="w-full text-left px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f5f0ec] flex items-center gap-2 sm:gap-2.5 font-medium transition text-[10px] sm:text-xs"
+            >
+              <Bell className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c]" /> <span>Notifications</span>
+            </button>
+          </div>
+          <div className="border-t border-[#f5f0ec] pt-1 mt-1">
+            <button 
+              onClick={() => handleProfileAction('logout')}
+              className="w-full text-left px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 sm:gap-2.5 font-semibold transition text-[10px] sm:text-xs"
+            >
+              <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-500" /> <span>Log Out</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</header>
 
         {/* MAIN CONTENT - Responsive */}
         <main className="p-3 sm:p-4 md:p-6 flex-1 overflow-y-auto min-h-0 space-y-4 sm:space-y-6">
