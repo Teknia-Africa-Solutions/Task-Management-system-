@@ -724,7 +724,7 @@ export default function Home() {
 
   // Dashboard App - Fully Responsive with Working Profile on Mobile
   return (
-    <div className="flex h-screen w-screen bg-[#f7f2ee] text-[#2d231e] font-sans overflow-hidden">
+    <div className="flex h-screen w-full max-w-full bg-[#f7f2ee] text-[#2d231e] font-sans overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (
         <div 
@@ -835,7 +835,7 @@ export default function Home() {
         {activeTab === 'settings' && 'Settings'}
       </h1>
       {activeTab === 'dashboard' && (
-        <p className="text-[8px] sm:text-[9px] md:text-[10px] text-[#b5a69c] truncate hidden xs:block">Here&apos;s what your tasks look like:</p>
+        <p className="text-[8px] sm:text-[9px] md:text-[10px] text-[#b5a69c] truncate max-[420px]:hidden">Here&apos;s what your tasks look like:</p>
       )}
     </div>
   </div>
@@ -843,7 +843,7 @@ export default function Home() {
   {/* Right side - All buttons visible on mobile */}
   <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-shrink-0">
     {/* Search - Visible on all screen sizes */}
-    <div className="flex items-center gap-1 sm:gap-2 bg-[#f5f0ec]/80 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded-xl border border-[#e5ddd8]/80 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition max-w-[80px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[180px] lg:max-w-[240px]">
+    <div className="flex items-center gap-1 sm:gap-2 bg-[#f5f0ec]/80 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded-xl border border-[#e5ddd8]/80 focus-within:ring-2 focus-within:ring-[#b35c44]/20 transition max-w-[72px] sm:max-w-[120px] md:max-w-[180px] lg:max-w-[240px]">
       <Search className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#b5a69c] shrink-0" />
       <input
         type="text"
@@ -855,7 +855,7 @@ export default function Home() {
     {/* Filter - Visible on all screen sizes */}
     <button className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-[#2d231e] bg-white hover:bg-[#f5f0ec] border border-[#e5ddd8] rounded-xl transition shadow-sm whitespace-nowrap">
       <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-      <span className="hidden xs:inline text-[10px] sm:text-xs">Filter</span>
+      <span className="max-[420px]:hidden text-[10px] sm:text-xs">Filter</span>
     </button>
 
     {/* Bell */}
@@ -872,7 +872,7 @@ export default function Home() {
       className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] hover:from-[#a04f3a] hover:to-[#7a5d4f] rounded-xl shadow-md shadow-[#b35c44]/20 transition active:scale-95 whitespace-nowrap"
     >
       <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-      <span className="hidden xs:inline text-[10px] sm:text-xs">New</span>
+      <span className="max-[420px]:hidden text-[10px] sm:text-xs">New</span>
     </button>
 
     {/* Profile Dropdown - Works on Mobile */}
@@ -891,7 +891,7 @@ export default function Home() {
           <h4 className="text-[10px] sm:text-xs font-bold text-[#2d231e] leading-none">Nova</h4>
           <p className="text-[8px] sm:text-[10px] text-[#b5a69c] font-medium mt-0.5 hidden md:block">Project Manager</p>
         </div>
-        <ChevronDown className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#b5a69c] transition-transform duration-200 hidden xs:block ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#b5a69c] transition-transform duration-200 max-[420px]:hidden ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Profile Dropdown Menu - Fully Responsive */}
