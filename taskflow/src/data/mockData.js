@@ -1,0 +1,302 @@
+export const currentUser = {
+  name: "Nova",
+  role: "Project Manager",
+  accessRole: "admin", // "admin" | "member" — controls monitoring access
+  email: "nova@gmail.com",
+  initials: "NV",
+  color: "bg-primary-500",
+};
+
+export const teamMembers = [
+  {
+    id: 1,
+    name: "Nova",
+    role: "Project Manager",
+    accessRole: "admin",
+    email: "nova@taskflow.io",
+    phone: "+1 (555) 019-2834",
+    initials: "NV",
+    color: "bg-primary-500",
+    status: "Active",
+    capacity: 80,
+    activeTasks: 8,
+    completed: 24,
+  },
+  {
+    id: 2,
+    name: "Jane Doe",
+    role: "UI/UX Designer",
+    accessRole: "member",
+    email: "jane@taskflow.io",
+    phone: "+1 (555) 014-4920",
+    initials: "JD",
+    color: "bg-slate2-500",
+    status: "Active",
+    capacity: 65,
+    activeTasks: 5,
+    completed: 19,
+  },
+  {
+    id: 3,
+    name: "Mike Johnson",
+    role: "Backend Developer",
+    accessRole: "member",
+    email: "mike@taskflow.io",
+    phone: "+1 (555) 017-8821",
+    initials: "MJ",
+    color: "bg-primary-600",
+    status: "In Meeting",
+    capacity: 75,
+    activeTasks: 7,
+    completed: 31,
+  },
+  {
+    id: 4,
+    name: "Sarah Wilson",
+    role: "QA / Tester",
+    accessRole: "member",
+    email: "sarah@taskflow.io",
+    phone: "+1 (555) 012-3391",
+    initials: "SW",
+    color: "bg-primary-400",
+    status: "Busy",
+    capacity: 40,
+    activeTasks: 3,
+    completed: 15,
+  },
+  {
+    id: 5,
+    name: "David Brown",
+    role: "DevOps Engineer",
+    accessRole: "member",
+    email: "david@taskflow.io",
+    phone: "+1 (555) 013-7742",
+    initials: "DB",
+    color: "bg-primary-700",
+    status: "Offline",
+    capacity: 55,
+    activeTasks: 4,
+    completed: 22,
+  },
+  {
+    id: 6,
+    name: "Emily Chen",
+    role: "Frontend Developer",
+    accessRole: "member",
+    email: "emily@taskflow.io",
+    phone: "+1 (555) 011-5563",
+    initials: "EC",
+    color: "bg-slate2-400",
+    status: "Active",
+    capacity: 70,
+    activeTasks: 6,
+    completed: 27,
+  },
+];
+
+export const tasks = [
+  {
+    id: 1,
+    title: "UI Design for Dashboard",
+    priority: "HIGH",
+    status: "IN PROGRESS",
+    category: "Design",
+    due: "2026-05-21",
+    assignee: "Jane Doe",
+  },
+  {
+    id: 2,
+    title: "Database Design",
+    priority: "MEDIUM",
+    status: "TODO",
+    category: "Backend",
+    due: "2026-05-23",
+    assignee: "David Brown",
+  },
+  {
+    id: 3,
+    title: "API Integration",
+    priority: "MEDIUM",
+    status: "IN PROGRESS",
+    category: "Backend",
+    due: "2026-05-24",
+    assignee: "Mike Johnson",
+  },
+  {
+    id: 4,
+    title: "Project Documentation",
+    priority: "LOW",
+    status: "TODO",
+    category: "Docs",
+    due: "2026-05-28",
+    assignee: "Sarah Wilson",
+  },
+  {
+    id: 5,
+    title: "Client Meeting",
+    priority: "HIGH",
+    status: "DONE",
+    category: "Management",
+    due: "2026-05-20",
+    assignee: "Nova",
+  },
+  {
+    id: 6,
+    title: "Landing Page Design",
+    priority: "HIGH",
+    status: "DONE",
+    category: "Design",
+    due: "2026-05-19",
+    assignee: "Jane Doe",
+  },
+  {
+    id: 7,
+    title: "User Testing Round 2",
+    priority: "MEDIUM",
+    status: "REVIEW",
+    category: "QA",
+    due: "2026-05-26",
+    assignee: "Sarah Wilson",
+  },
+  {
+    id: 8,
+    title: "Deploy Staging Server",
+    priority: "HIGH",
+    status: "REVIEW",
+    category: "DevOps",
+    due: "2026-05-25",
+    assignee: "David Brown",
+  },
+];
+
+export const projects = [
+  {
+    id: 1,
+    name: "Inventory Management System",
+    doneCount: 15,
+    totalCount: 20,
+    progress: 75,
+    icon: "folder",
+    barColor: "bg-primary-500",
+    buttonColor: "bg-primary-500 hover:bg-primary-600",
+  },
+  {
+    id: 2,
+    name: "Task Management System",
+    doneCount: 12,
+    totalCount: 18,
+    progress: 67,
+    icon: "grid",
+    barColor: "bg-[#9B7B6A]",
+    buttonColor: "bg-[#9B7B6A] hover:bg-[#8a6c5c]",
+  },
+  {
+    id: 3,
+    name: "Website Redesign",
+    doneCount: 8,
+    totalCount: 15,
+    progress: 53,
+    icon: "file",
+    barColor: "bg-primary-400",
+    buttonColor: "bg-primary-400 hover:bg-primary-500",
+  },
+  {
+    id: 4,
+    name: "Mobile App Development",
+    doneCount: 10,
+    totalCount: 25,
+    progress: 40,
+    icon: "device",
+    barColor: "bg-slate2-500",
+    buttonColor: "bg-slate2-500 hover:bg-slate2-400",
+  },
+];
+
+export const upcomingDeadlines = [
+  { id: 1, month: "MAY", day: "21", title: "Project Proposal", note: "Tomorrow" },
+  { id: 2, month: "MAY", day: "23", title: "UI Design Submission", note: "In 2 days" },
+  { id: 3, month: "MAY", day: "24", title: "Client Presentation", note: "In 3 days" },
+  { id: 4, month: "MAY", day: "28", title: "Final Report", note: "In 7 days" },
+];
+
+export const taskOverviewData = [
+  { day: "Wed, May 21", completed: 24, created: 18 },
+  { day: "Thu", completed: 21, created: 16 },
+  { day: "Fri", completed: 18, created: 21 },
+  { day: "Sat", completed: 14, created: 10 },
+  { day: "Sun", completed: 8, created: 7 },
+];
+
+export const completionTrend = [
+  { week: "Week 1", completed: 14, pending: 10 },
+  { week: "Week 2", completed: 17, pending: 12 },
+  { week: "Week 3", completed: 15, pending: 9 },
+  { week: "Week 4", completed: 23, pending: 13 },
+  { week: "Week 5", completed: 32, pending: 15 },
+  { week: "Week 6", completed: 28, pending: 12 },
+  { week: "Week 7", completed: 38, pending: 18 },
+  { week: "Week 8", completed: 42, pending: 15 },
+  { week: "Week 9", completed: 34, pending: 20 },
+  { week: "Week 10", completed: 48, pending: 17 },
+  { week: "Week 11", completed: 52, pending: 22 },
+  { week: "Week 12", completed: 54, pending: 17 },
+];
+
+export const teamPreview = [
+  { initials: "AC", color: "bg-primary-500" },
+  { initials: "MR", color: "bg-slate2-500" },
+  { initials: "JK", color: "bg-primary-600" },
+  { initials: "SP", color: "bg-primary-400" },
+  { initials: "TW", color: "bg-primary-700" },
+];
+
+export const calendarEvents = [
+  { id: 1, date: "2026-05-21", title: "Project Proposal", color: "rust" },
+  { id: 2, date: "2026-05-23", title: "UI Design", color: "amber" },
+  { id: 3, date: "2026-05-24", title: "Client Presentation", color: "rust" },
+  { id: 4, date: "2026-05-28", title: "Final Report", color: "rust" },
+];
+
+export const messageThreads = [
+  {
+    id: 1,
+    name: "Jane Doe",
+    initials: "JD",
+    color: "bg-primary-500",
+    online: true,
+    messages: [
+      { id: 1, from: "them", text: "Hey! How's the UI design coming along?", time: "10:30 AM" },
+      { id: 2, from: "me", text: "Almost done! Just finishing the dashboard layout.", time: "10:32 AM" },
+      { id: 3, from: "them", text: "Great! Can you share the prototype by EOD?", time: "10:35 AM" },
+    ],
+  },
+];
+
+export const workspaceFiles = [
+  { id: 1, name: "Database_Schema_v2.sql", size: "2.4 MB", uploadedBy: "Mike", type: "sql" },
+  { id: 2, name: "Q3_Financial_Forecast.xlsx", size: "1.8 MB", uploadedBy: "Elina", type: "xlsx" },
+  { id: 3, name: "UI_Spec.png", size: "8.1 MB", uploadedBy: "Jane", type: "image" },
+  { id: 4, name: "API_Doc.pdf", size: "512 KB", uploadedBy: "Nova", type: "pdf" },
+  { id: 5, name: "Architecture.png", size: "4.3 MB", uploadedBy: "Brian", type: "image" },
+];
+
+export const notifications = [
+  {
+    id: 1,
+    type: "info",
+    title: "Sprint Review Scheduled",
+    description: "Nova added a new calendar entry for May 21st.",
+  },
+  {
+    id: 2,
+    type: "success",
+    title: "Task Completed",
+    description: "Jane marked 'Landing Page Design' as completed.",
+  },
+  {
+    id: 3,
+    type: "warning",
+    title: "Upcoming Deadline",
+    description: "Project Proposal is due tomorrow!",
+  },
+];
