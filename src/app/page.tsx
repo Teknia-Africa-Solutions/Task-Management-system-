@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -339,7 +340,7 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function Home() {
-  const [isLandingPage, setIsLandingPage] = useState(true);
+  const [isLandingPage, setIsLandingPage] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -354,79 +355,112 @@ export default function Home() {
   const [taskFilter, setTaskFilter] = useState<'ALL' | 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE'>('ALL');
   const [teamMembers] = useState<TeamMember[]>(TEAM_MEMBERS);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Close mobile sidebar on resize to desktop
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsMobileSidebarOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+// Check login status on page load
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  setIsLoggedIn(!!token);
+}, []);
 
-  // Close mobile sidebar when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (isMobileSidebarOpen && !target.closest('aside') && !target.closest('button')) {
-        setIsMobileSidebarOpen(false);
+// Fetch tasks from MySQL API with authentication
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('No token found, using mock data');
+        return;
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMobileSidebarOpen]);
 
-  // Fetch tasks from MySQL API
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch('/api/tasks');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.length > 0) {
-            setTasks(data);
-          }
+      const response = await fetch('/api/tasks', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const formattedTasks = result.data.map((task: any) => ({
+            id: task.id,
+            title: task.title,
+            category: task.project?.name || 'General',
+            status: task.status.toUpperCase(),
+            priority: task.priority.toUpperCase(),
+            due: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : 'No due date',
+            assignee: task.assignee?.name || 'Unassigned',
+          }));
+          setTasks(formattedTasks);
         }
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
+      } else if (response.status === 401) {
+        console.log('Authentication failed, please login again');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
+  
+  if (localStorage.getItem('token')) {
     fetchTasks();
-  }, []);
+  } else {
+    console.log('User not logged in, using mock data');
+  }
+}, []);
 
   const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+  e.preventDefault();
+  if (!newTaskTitle.trim()) return;
 
-    const newTask = {
-      title: newTaskTitle,
-      category: newTaskCategory,
-      status: 'TODO',
-      priority: newTaskPriority,
-      due: new Date().toISOString().split('T')[0],
-      assignee: 'You',
-    };
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Please login first');
+    return;
+  }
 
-    try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTask),
-      });
-      if (response.ok) {
-        const createdTask = await response.json();
-        setTasks([createdTask, ...tasks]);
+  const newTask = {
+    title: newTaskTitle,
+    description: newTaskCategory,
+    priority: newTaskPriority.toLowerCase(),
+    dueDate: new Date().toISOString().split('T')[0],
+  };
+
+  try {
+    const response = await fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(newTask),
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        // Add the new task to the list
+        const formattedTask = {
+          id: result.data.id,
+          title: result.data.title,
+          category: 'General',
+          status: 'TODO',
+          priority: result.data.priority.toUpperCase(),
+          due: result.data.dueDate ? new Date(result.data.dueDate).toISOString().split('T')[0] : 'No due date',
+          assignee: 'You',
+        };
+        setTasks([formattedTask, ...tasks]);
         setNewTaskTitle('');
         setIsModalOpen(false);
       }
-    } catch (error) {
-      console.error('Error creating task:', error);
+    } else {
+      alert('Failed to create task');
     }
-  };
-
+  } catch (error) {
+    console.error('Error creating task:', error);
+    alert('Something went wrong');
+  }
+};
   const handleFileUpload = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -569,47 +603,34 @@ export default function Home() {
   if (isLandingPage) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#f7f2ee] to-white">
-        {/* Navbar */}
-        <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-[#e5ddd8]/80 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center gap-2">
-                <div className="relative p-2 rounded-lg bg-gradient-to-br from-[#b35c44]/20 to-[#8f6b5c]/20 border border-[#b35c44]/30 text-[#d4846a]">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <span className="font-bold text-lg text-[#2d231e]">TaskFlow</span>
-              </div>
+        {/* Navbar - Simple Working Version */}
+<nav className="bg-white shadow-sm border-b border-[#e5ddd8]/80 px-4 py-3">
+  <div className="max-w-7xl mx-auto flex justify-between items-center">
+    {/* Logo */}
+    <div className="flex items-center gap-2">
+      <div className="relative p-2 rounded-lg bg-gradient-to-br from-[#b35c44]/20 to-[#8f6b5c]/20 border border-[#b35c44]/30 text-[#d4846a]">
+        <Activity className="w-5 h-5" />
+      </div>
+      <span className="font-bold text-lg text-[#2d231e]">TaskFlow</span>
+    </div>
 
-              <div className="hidden md:flex items-center gap-8">
-                <button 
-                  onClick={() => setIsLandingPage(false)}
-                  className="px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] rounded-xl hover:shadow-lg transition flex items-center gap-2"
-                >
-                  Go to Dashboard <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              <button 
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-[#f5f0ec] transition"
-              >
-                <Menu className="w-5 h-5 text-[#2d231e]" />
-              </button>
-            </div>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden bg-white border-t border-[#e5ddd8]/80 p-4 space-y-3">
-              <button 
-                onClick={() => setIsLandingPage(false)}
-                className="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2"
-              >
-                Go to Dashboard <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </nav>
-
+    {/* Navigation Buttons */}
+    <div className="flex items-center gap-4">
+      <Link 
+        href="/login" 
+        className="text-sm font-semibold text-[#2d231e] hover:text-[#b35c44] transition px-3 py-2"
+      >
+        Login
+      </Link>
+      <Link 
+        href="/signup" 
+        className="text-sm font-semibold text-white bg-gradient-to-r from-[#b35c44] to-[#8f6b5c] px-5 py-2 rounded-xl hover:shadow-lg transition"
+      >
+        Sign Up
+      </Link>
+    </div>
+  </div>
+</nav>
         {/* Hero Section */}
         <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">

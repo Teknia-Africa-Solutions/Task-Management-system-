@@ -1,26 +1,84 @@
-﻿import { NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth';
 
-// Mock data for demonstration
-let tasks = [
-  { id: 1, title: 'UI Design for Dashboard', category: 'Design', status: 'IN_PROGRESS', priority: 'HIGH', due: '2026-05-21', assignee: 'Jane Doe' },
-  { id: 2, title: 'Database Design', category: 'Backend', status: 'TODO', priority: 'MEDIUM', due: '2026-05-23', assignee: 'David Brown' },
-  { id: 3, title: 'API Integration', category: 'Backend', status: 'IN_PROGRESS', priority: 'MEDIUM', due: '2026-05-24', assignee: 'Mike Johnson' },
-  { id: 4, title: 'Project Documentation', category: 'Docs', status: 'TODO', priority: 'LOW', due: '2026-05-28', assignee: 'Sarah Wilson' },
-];
+export async function GET(request: NextRequest) {
+  const user = await getCurrentUser(request);
+  if (!user) {
+    return NextResponse.json(
+      { success: false, message: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
 
-let nextId = 5;
+  try {
+    const tasks = await prisma.task.findMany({
+      where: {
+        OR: [
+          { assignedTo: user.id },
+          { createdBy: user.id }
+        ]
+      },
+      include: {
+        assignee: { select: { id: true, name: true, email: true } },
+        project: { select: { id: true, name: true } },
+        creator: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
 
-export async function GET() {
-  return NextResponse.json(tasks);
+    return NextResponse.json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error) {
+    console.error('Get tasks error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to fetch tasks' },
+      { status: 500 }
+    );
+  }
 }
 
-export async function POST(request: Request) {
-  const body = await request.json();
-  const newTask = {
-    id: nextId++,
-    ...body,
-    status: 'TODO',
-  };
-  tasks = [newTask, ...tasks];
-  return NextResponse.json(newTask);
+export async function POST(request: NextRequest) {
+  const user = await getCurrentUser(request);
+  if (!user) {
+    return NextResponse.json(
+      { success: false, message: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { title, description, priority, dueDate, projectId, assignedTo } = body;
+
+    const task = await prisma.task.create({
+      data: {
+        title,
+        description,
+        priority: priority || 'medium',
+        dueDate: dueDate ? new Date(dueDate) : null,
+        projectId: projectId || null,
+        assignedTo: assignedTo || null,
+        createdBy: user.id,
+      },
+      include: {
+        assignee: { select: { id: true, name: true } },
+        project: { select: { id: true, name: true } },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Task created successfully',
+      data: task,
+    });
+  } catch (error) {
+    console.error('Create task error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to create task' },
+      { status: 500 }
+    );
+  }
 }

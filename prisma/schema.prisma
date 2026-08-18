@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:@localhost:3306/taskflow_db"
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(100)
+  email         String         @unique(map: "email") @db.VarChar(100)
+  passwordHash  String         @map("password_hash") @db.VarChar(255)
+  role          Role?          @default(developer)
+  avatar        String?        @db.VarChar(255)
+  isActive      Boolean?       @default(true) @map("is_active")
+  lastLogin     DateTime?      @map("last_login") @db.Timestamp(0)
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  attachments   Attachment[]   @relation("AttachmentUploader")
+  comments      Comment[]
+  notifications Notification[]
+  projects      Project[]      @relation("ProjectCreator")
+  tasksAssigned Task[]         @relation("AssignedTasks")
+  tasksCreated  Task[]         @relation("CreatedTasks")
+  teamMembers   TeamMember[]
+
+  @@map("users")
+}
+
+model Project {
+  id          Int            @id @default(autoincrement())
+  name        String         @db.VarChar(255)
+  description String?        @db.Text
+  progress    Int?           @default(0)
+  status      ProjectStatus? @default(planning)
+  startDate   DateTime?      @map("start_date") @db.Date
+  endDate     DateTime?      @map("end_date") @db.Date
+  createdBy   Int?           @map("created_by")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  creator     User?          @relation("ProjectCreator", fields: [createdBy], references: [id], onUpdate: Restrict, map: "projects_ibfk_1")
+  tasks       Task[]
+  teamMembers TeamMember[]
+
+  @@index([createdBy], map: "created_by")
+  @@map("projects")
+}
+
+model Task {
+  id             Int          @id @default(autoincrement())
+  title          String       @db.VarChar(255)
+  description    String?      @db.Text
+  status         TaskStatus?  @default(todo)
+  priority       Priority?    @default(medium)
+  dueDate        DateTime?    @map("due_date") @db.Date
+  projectId      Int?         @map("project_id")
+  assignedTo     Int?         @map("assigned_to")
+  createdBy      Int?         @map("created_by")
+  estimatedHours Decimal?     @map("estimated_hours") @db.Decimal(5, 2)
+  actualHours    Decimal?     @map("actual_hours") @db.Decimal(5, 2)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  attachments    Attachment[]
+  comments       Comment[]
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "tasks_ibfk_1")
+  assignee       User?        @relation("AssignedTasks", fields: [assignedTo], references: [id], onUpdate: Restrict, map: "tasks_ibfk_2")
+  creator        User?        @relation("CreatedTasks", fields: [createdBy], references: [id], onUpdate: Restrict, map: "tasks_ibfk_3")
+
+  @@index([assignedTo], map: "assigned_to")
+  @@index([createdBy], map: "created_by")
+  @@index([projectId], map: "project_id")
+  @@map("tasks")
+}
+
+model TeamMember {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  projectId Int       @map("project_id")
+  role      TeamRole? @default(member)
+  joinedAt  DateTime  @default(now()) @map("joined_at") @db.Timestamp(0)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "team_members_ibfk_1")
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "team_members_ibfk_2")
+
+  @@unique([userId, projectId], map: "unique_member")
+  @@index([projectId], map: "project_id")
+  @@map("team_members")
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  taskId    Int       @map("task_id")
+  userId    Int       @map("user_id")
+  content   String    @db.Text
+  parentId  Int?      @map("parent_id")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "comments_ibfk_1")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "comments_ibfk_2")
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "comments_ibfk_3")
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([parentId], map: "parent_id")
+  @@index([taskId], map: "task_id")
+  @@index([userId], map: "user_id")
+  @@map("comments")
+}
+
+model Attachment {
+  id         Int      @id @default(autoincrement())
+  taskId     Int      @map("task_id")
+  fileName   String   @map("file_name") @db.VarChar(255)
+  fileUrl    String   @map("file_url") @db.VarChar(500)
+  fileSize   Int?     @map("file_size")
+  fileType   String?  @map("file_type") @db.VarChar(100)
+  uploadedBy Int?     @map("uploaded_by")
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.Timestamp(0)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "attachments_ibfk_1")
+  uploader   User?    @relation("AttachmentUploader", fields: [uploadedBy], references: [id], onUpdate: Restrict, map: "attachments_ibfk_2")
+
+  @@index([taskId], map: "task_id")
+  @@index([uploadedBy], map: "uploaded_by")
+  @@map("attachments")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
+  type      NotificationType
+  message   String           @db.Text
+  read      Boolean?         @default(false)
+  link      String?          @db.VarChar(255)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamp(0)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "notifications_ibfk_1")
+
+  @@index([userId], map: "user_id")
+  @@map("notifications")
+}
+
+enum Role {
+  admin
+  project_manager
+  developer
+  viewer
+}
+
+enum ProjectStatus {
+  planning
+  active
+  review
+  completed
+  archived
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  review
+  done
+}
+
+enum Priority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum TeamRole {
+  lead
+  member
+  contributor
+}
+
+enum NotificationType {
+  task_assigned
+  task_updated
+  comment_added
+  deadline_approaching
+  project_updated
+}
