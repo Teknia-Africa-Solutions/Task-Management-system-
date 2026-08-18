@@ -20,9 +20,11 @@ import CalendarPage from "./pages/Calendar";
 import Messages from "./pages/Messages";
 import Files from "./pages/Files";
 import Notifications from "./pages/Notifications";
+import { ToastProvider } from "./context/ToastContext";
 
 export default function App() {
   return (
+    <ToastProvider>
     <AuthProvider>
       <TasksProvider>
         <CalendarProvider>
@@ -124,5 +126,6 @@ export default function App() {
         </CalendarProvider>
       </TasksProvider>
     </AuthProvider>
+    </ToastProvider>
   );
 }

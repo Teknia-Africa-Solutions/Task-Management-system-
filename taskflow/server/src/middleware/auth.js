@@ -30,3 +30,12 @@ export function requireAdmin(req, res, next) {
   }
   next();
 }
+
+// Gate for admin+manager endpoints (project managers need to see the roster
+// to assign tasks, but shouldn't get full admin powers).
+export function requireStaff(req, res, next) {
+  if (!["admin", "manager"].includes(req.user?.access_role)) {
+    return res.status(403).json({ error: "Admin or manager access required" });
+  }
+  next();
+}

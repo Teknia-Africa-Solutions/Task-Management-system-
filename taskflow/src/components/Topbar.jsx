@@ -10,7 +10,7 @@ const FILTER_OPTIONS = ["ALL", "HIGH", "MEDIUM", "LOW"];
 export default function Topbar({ title, subtitle, onMenuClick, onNewTask }) {
   const { user, logout } = useAuth();
   const { notifications } = useNotifications();
-  const { priorityFilter, setPriorityFilter } = useTasks();
+  const { priorityFilter, setPriorityFilter, searchQuery, setSearchQuery } = useTasks();
   const [menuOpen, setMenuOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const navigate = useNavigate();
@@ -41,16 +41,18 @@ export default function Topbar({ title, subtitle, onMenuClick, onNewTask }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 ml-auto">
-        <div className="hidden sm:flex items-center gap-2 bg-white border border-black/10 rounded-full px-4 py-2 w-56 lg:w-72">
-          <Search size={16} className="text-slate2-400" />
+      <div className="flex flex-wrap items-center gap-3 ml-auto">
+        <div className="flex items-center gap-2 bg-white border border-black/10 rounded-full px-4 py-2 w-full sm:w-56 lg:w-72">
+          <Search size={16} className="text-slate2-400 shrink-0" />
           <input
-            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search tasks..."
             className="bg-transparent outline-none text-sm w-full placeholder:text-slate2-400"
           />
         </div>
 
-        <div className="relative hidden sm:block">
+        <div className="relative">
           <button
             onClick={() => setFilterOpen((v) => !v)}
             className={`flex items-center gap-2 border rounded-full px-4 py-2 text-sm font-medium hover:bg-black/5 ${

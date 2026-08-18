@@ -5,27 +5,28 @@ import { PriorityBadge, StatusBadge } from "../components/ui";
 import { useTasks } from "../context/TasksContext";
 import { useAuth } from "../context/AuthContext";
 import { teamMembers } from "../data/mockData";
+import { useToast } from "../context/ToastContext";
 
 const tabs = ["ALL", "TODO", "IN PROGRESS", "REVIEW", "DONE"];
 
 export default function MyTasks() {
-  const { tasks, toggleDone, editTask, deleteTask, priorityFilter } = useTasks();
+  const { tasks, toggleDone, editTask, deleteTask, priorityFilter,searchQuery } = useTasks();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isAdmin = user?.accessRole === "admin";
   const isStaff = isAdmin || user?.accessRole === "manager";
   const [activeTab, setActiveTab] = useState("ALL");
   const [preview, setPreview] = useState(null);
   const [editing, setEditing] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   // Members only ever see tasks assigned to them; staff (admin/manager) see everyone's.
-  const visibleTasks = isStaff
-    ? tasks
-    : tasks.filter((t) => t.assignee === user?.name);
+const visibleTasks = isStaff ? tasks : tasks.filter((t) => t.assignee === user?.name);
 
   const filtered = visibleTasks
     .filter((t) => activeTab === "ALL" || t.status === activeTab)
-    .filter((t) => priorityFilter === "ALL" || t.priority === priorityFilter);
-
+    .filter((t) => priorityFilter === "ALL" || t.priority === priorityFilter)
+    .filter((t) => !searchQuery.trim() || t.title.toLowerCase().includes(searchQuery.trim().toLowerCase()));
   return (
     <Layout title="My Tasks">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
@@ -85,7 +86,7 @@ export default function MyTasks() {
                     <Pencil size={16} />
                   </button>
                   <button
-                    onClick={() => deleteTask(t.id)}
+                    onClick={() => setConfirmDelete(t)}
                     className="text-slate2-400 hover:text-rose-500"
                     aria-label="Delete task"
                   >
@@ -93,17 +94,20 @@ export default function MyTasks() {
                   </button>
                 </>
               )}
-              <button
-                onClick={() => toggleDone(t.id)}
-                className={t.status === "DONE" ? "text-emerald-600" : "text-slate2-400 hover:text-emerald-600"}
-                aria-label="Toggle done"
-              >
-                {t.status === "DONE" ? (
-                  <CheckCircle2 size={19} />
-                ) : (
-                  <Circle size={19} />
-                )}
-              </button>
+             <button
+  onClick={() => {
+    toggleDone(t.id);
+    showToast(t.status === "DONE" ? "Task marked as not done" : "Task completed ");
+  }}
+  className={t.status === "DONE" ? "text-emerald-600" : "text-slate2-400 hover:text-emerald-600"}
+  aria-label="Toggle done"
+>
+  {t.status === "DONE" ? (
+    <CheckCircle2 size={19} />
+  ) : (
+    <Circle size={19} />
+  )}
+</button>
             </div>
           </div>
         ))}
@@ -236,7 +240,41 @@ export default function MyTasks() {
             </form>
           </div>
         </div>
-      )}
+      )};
+      {confirmDelete && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+    onClick={() => setConfirmDelete(null)}
+  >
+    <div
+      className="bg-white rounded-2xl w-full max-w-sm p-6"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h3 className="font-bold text-sidebar mb-2">Delete this task?</h3>
+      <p className="text-sm text-slate2-500 mb-5">
+        "{confirmDelete.title}" will be permanently deleted. This can't be undone.
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={() => setConfirmDelete(null)}
+          className="flex-1 border border-black/10 text-sidebar font-semibold py-2.5 rounded-lg hover:bg-black/5"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+  deleteTask(confirmDelete.id);
+  setConfirmDelete(null);
+  showToast("Task deleted");
+}}
+          className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 rounded-lg"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </Layout>
   );
 }

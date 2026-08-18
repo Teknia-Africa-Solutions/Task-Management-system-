@@ -10,6 +10,7 @@ import {
   FileText,
   BarChart2,
   Bell,
+  X,
   Menu,
   Activity,
   Timer,
@@ -42,28 +43,31 @@ export default function Sidebar({ open, setOpen }) {
         />
       )}
       <aside
-        className={`bg-sidebar text-white w-64 shrink-0 flex flex-col fixed md:static inset-y-0 left-0 z-40 transform transition-transform duration-200 ${
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+className={`bg-sidebar text-white w-64 shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 overflow-y-auto transform transition-transform duration-200 ${          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <div className="flex items-center gap-2 px-6 py-6">
-          <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center">
-            <Activity size={18} className="text-white" />
+      <div className="flex items-center justify-between px-6 py-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center">
+              <Activity size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-[17px] leading-none">TaskFlow</p>
+              <p className="text-[10px] tracking-widest text-primary-400 font-semibold mt-1">
+                DASHBOARD
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-[17px] leading-none">TaskFlow</p>
-            <p className="text-[10px] tracking-widest text-primary-400 font-semibold mt-1">
-              DASHBOARD
-            </p>
-          </div>
+          <button
+            className="md:hidden text-white/70 hover:text-white"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+          >
+            <X size={22} />
+          </button>
         </div>
 
-        <button
-          className="md:hidden text-white/70 px-6 pb-4 self-start"
-          onClick={() => setOpen(false)}
-        >
-          <Menu size={20} />
-        </button>
+       
 
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {visibleNav.map(({ to, label, icon: Icon }) => (

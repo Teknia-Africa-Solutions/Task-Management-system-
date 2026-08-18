@@ -29,18 +29,17 @@ export default function Tracker() {
   const myTasks = tasks.filter((t) => t.assignee === user?.name && t.status !== "DONE");
   const activeTask = myTasks.find((t) => t.id === activeTaskId) || myTasks[0] || null;
 
-  function handleClockIn() {
-    const res = clockIn();
+    async function handleClockIn() {
+    const res = await clockIn();
     if (!res.ok) setError(res.message);
     else setError("");
   }
 
-  function handleClockOut() {
-    const res = clockOut();
+  async function handleClockOut() {
+    const res = await clockOut();
     if (!res.ok) setError(res.message);
     else setError("");
   }
-
   function handleLogNote(e) {
     e.preventDefault();
     if (!activeTask || !note.trim()) return;
@@ -200,8 +199,10 @@ export default function Tracker() {
                   className="flex items-center justify-between rounded-xl border border-black/5 px-4 py-2.5 text-sm"
                 >
                   <span className="font-medium text-sidebar">{h.date}</span>
-                  <span className="text-slate2-500">
-                    {formatDuration(h.clockOutAt - h.clockInAt)}
+                                    <span className="text-slate2-500">
+                    {h.durationMinutes != null
+                      ? formatDuration(h.durationMinutes * 60000)
+                      : "In progress"}
                   </span>
                 </div>
               ))}

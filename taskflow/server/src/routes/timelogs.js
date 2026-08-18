@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { query, pool } from "../db.js";
-import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import { requireAuth, requireStaff } from "../middleware/auth.js";
 import { emitTimelogUpdate } from "../realtime.js";
 
 const router = Router();
@@ -54,7 +54,7 @@ router.get("/mine", async (req, res) => {
 });
 
 // GET /api/timelogs/active  (admin) -> everyone currently clocked in (live monitor)
-router.get("/active", requireAdmin, async (_req, res) => {
+router.get("/active", requireStaff, async (_req, res) => {
   const rows = await query(
     `${SELECT_LOG} WHERE tl.work_date = ? ORDER BY tl.clock_in_at DESC`,
     [today()]
