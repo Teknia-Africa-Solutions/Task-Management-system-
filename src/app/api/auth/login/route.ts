@@ -1,40 +1,36 @@
-﻿// src/app/api/auth/login/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { JWT_SECRET } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
-        { success: false, message: 'Email and password are required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    // Compare the password with the hash
-    const isValid = await bcrypt.compare(password, user.passwordHash);
-
-    if (!isValid) {
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    
+    if (!isPasswordValid) {
       return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
@@ -45,24 +41,30 @@ export async function POST(request: NextRequest) {
       { expiresIn: '7d' }
     );
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      message: 'Login successful',
-      data: {
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          avatar: user.avatar,
-        },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
       },
     });
+
+    // ✅ Set cookie properly
+    response.cookies.set('token', token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  // Remove maxAge to make it a session cookie (deletes on browser close)
+  path: '/',
+});
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { success: false, message: 'Something went wrong' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

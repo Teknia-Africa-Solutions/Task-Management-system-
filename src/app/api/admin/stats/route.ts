@@ -5,16 +5,21 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     
-    if (!user) {
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Not authenticated' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    return NextResponse.json({ user });
+    // Return mock stats for now
+    return NextResponse.json({
+      totalUsers: 0,
+      totalProjects: 0,
+      totalTasks: 0,
+    });
   } catch (error) {
-    console.error('Error in /api/auth/me:', error);
+    console.error('Error fetching admin stats:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

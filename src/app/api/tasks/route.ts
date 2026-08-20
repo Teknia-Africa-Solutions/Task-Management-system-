@@ -1,83 +1,69 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
-  const user = await getCurrentUser(request);
-  if (!user) {
-    return NextResponse.json(
-      { success: false, message: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-
   try {
-    const tasks = await prisma.task.findMany({
-      where: {
-        OR: [
-          { assignedTo: user.id },
-          { createdBy: user.id }
-        ]
-      },
-      include: {
-        assignee: { select: { id: true, name: true, email: true } },
-        project: { select: { id: true, name: true } },
-        creator: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const user = await getCurrentUser();
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: tasks,
+    // Return empty array for now (no tasks)
+    return NextResponse.json({ 
+      success: true, 
+      data: [] 
     });
   } catch (error) {
-    console.error('Get tasks error:', error);
+    console.error('Error fetching tasks:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch tasks' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser(request);
-  if (!user) {
-    return NextResponse.json(
-      { success: false, message: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-
   try {
+    const user = await getCurrentUser();
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const { title, description, priority, dueDate, projectId, assignedTo } = body;
+    const { title, description, priority, dueDate } = body;
 
-    const task = await prisma.task.create({
-      data: {
-        title,
-        description,
-        priority: priority || 'medium',
-        dueDate: dueDate ? new Date(dueDate) : null,
-        projectId: projectId || null,
-        assignedTo: assignedTo || null,
-        createdBy: user.id,
-      },
-      include: {
-        assignee: { select: { id: true, name: true } },
-        project: { select: { id: true, name: true } },
-      },
-    });
+    if (!title) {
+      return NextResponse.json(
+        { error: 'Title is required' },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Task created successfully',
-      data: task,
+    // Return created task (mock for now)
+    return NextResponse.json({ 
+      success: true, 
+      data: { 
+        id: Date.now(), 
+        title, 
+        description, 
+        priority, 
+        dueDate,
+        status: 'TODO',
+        userId: user.id
+      } 
     });
   } catch (error) {
-    console.error('Create task error:', error);
+    console.error('Error creating task:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to create task' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
